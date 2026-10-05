@@ -13,7 +13,9 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "oxlint --type-aware src/"
+    "lint": "oxlint --type-aware src/",
+    "db:seed": "docker compose exec -T db sh -c 'psql -v ON_ERROR_STOP=1 -1 -U $POSTGRES_USER -d $POSTGRES_DB' < src/infra/database/seeds/001_seed.sql",
+    "db:truncate": "docker compose exec -T db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB -c \"TRUNCATE users, locations, properties, occurrences, media, triage, assignments, inspections, status_history, notifications CASCADE\"'"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
