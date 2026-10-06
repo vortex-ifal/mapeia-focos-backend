@@ -13,7 +13,7 @@ Você está trabalhando no backend do sistema **Mapeia Focos**. Siga rigorosamen
 A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigorosa. Cada camada tem uma responsabilidade estrita:
 
 1. **`controllers/`**: Rotas HTTP, Guards (`@Roles`, `@CurrentUser`), recepção de DTOs. **Nunca inclua regras de negócio ou chamadas ao banco aqui.**
-2. **`services/`**: Orquestração de casos de uso. Recebe Entidades, aplica regras e delega a repositórios ou mappers.
+2. **`services/`**: Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`). Recebe e retorna estritamente Entidades, aplica regras e delega a repositórios.
 3. **`entities/`**: O coração do domínio. Classes TypeScript puras, organizadas em subpastas por entidade (ex: `user/`). Cada entidade possui:
    - `*.entity.ts`: A classe de domínio sem decorators de infra.
    - `*.props.ts`: As interfaces/tipos da entidade.
@@ -39,7 +39,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 
 ## 5. Convenções de Código
 - Utilize **Inglês** para nomes de variáveis, métodos, classes e entidades (ex: `OccurrenceEntity`, `UserRepository`).
-- Utilize `snake_case` para os arquivos (ex: `occurrence.entity.ts`).
+- Utilize **`kebab-case`** para os arquivos TypeScript (ex: `occurrence.entity.ts`, `create-occurrence.dto.ts`).
 - Priorize a tipagem explícita nos retornos de funções.
 
 ## 6. Documentação e Referências
