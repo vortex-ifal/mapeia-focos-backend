@@ -24,7 +24,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
    - `toPersistence()`: Entity -> Drizzle Schema Insert
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
 5. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
-6. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados.
+6. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
 7. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
 
 ## 3. Regra Mandatória: Barrel Exports (`index.ts`)
@@ -41,3 +41,6 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 - Utilize **Inglês** para nomes de variáveis, métodos, classes e entidades (ex: `OccurrenceEntity`, `UserRepository`).
 - Utilize `snake_case` para os arquivos (ex: `occurrence.entity.ts`).
 - Priorize a tipagem explícita nos retornos de funções.
+
+## 6. Documentação e Referências
+- **Diagrama ER (DER):** O modelo relacional oficial do banco de dados (tabelas, colunas, enums e relacionamentos) está documentado em `docs/diagrams/der-mapeia-focos.md`.
