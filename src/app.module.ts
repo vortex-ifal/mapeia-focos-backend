@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './infra';
+import { OccurrencesModule } from './modules';
 
 @Module({
   imports: [
@@ -8,6 +9,7 @@ import { DatabaseModule } from './infra';
       isGlobal: true,
     }),
     DatabaseModule,
+    OccurrencesModule,
   ],
   controllers: [],
   providers: [],
