@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    container_name: mapeia_focos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
+      POSTGRES_DB: ${DB_NAME:-mapeia_focos}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/infra/database/schema:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
