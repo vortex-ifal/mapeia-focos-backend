@@ -7,13 +7,13 @@ Você está trabalhando no backend do sistema **Mapeia Focos**. Siga rigorosamen
 - **ORM:** Drizzle ORM integrado ao PostgreSQL.
 - **Storage:** Cloudflare R2 (API S3) via `infra/storage`.
 - **Cache/Sessões:** Redis via `infra/redis`.
-- **Validação:** `class-validator` / `Zod` (na camada de DTOs).
+- **Validação:** `class-validator` / `class-transformer` (na camada de DTOs).
 
 ## 2. Padrão Arquitetural (Clean Architecture + MVC)
 A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigorosa. Cada camada tem uma responsabilidade estrita:
 
-1. **`controllers/`**: Rotas HTTP, Guards (`@Roles`, `@CurrentUser`), recepção de DTOs. **Nunca inclua regras de negócio ou chamadas ao banco aqui.**
-2. **`services/`**: Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`). Recebe e retorna estritamente Entidades, aplica regras e delega a repositórios.
+1. **`controllers/`**: Rotas HTTP, Guards (`@Roles`, `@CurrentUser`), recepção de DTOs e conversão via Mappers. **Nunca inclua regras de negócio ou chamadas ao banco aqui.**
+2. **`services/`**: Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`). **Regra estrita de tipagem e limites:** os services **só podem receber e retornar Entidades** (nunca recebem nem retornam DTOs ou schemas de persistência diretamente). Aplicam regras de negócio e delegam a repositórios.
 3. **`entities/`**: O coração do domínio. Classes TypeScript puras, organizadas em subpastas por entidade (ex: `user/`). Cada entidade possui:
    - `*.entity.ts`: A classe de domínio sem decorators de infra.
    - `*.props.ts`: As interfaces/tipos da entidade.
@@ -25,6 +25,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
 5. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
 6. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
+   - **Boas Práticas de Migrations:** Ao gerar novas migrações, **sempre utilize a flag `--name`** com um nome descritivo em `snake_case` (ex: `pnpm db:generate --name create_occurrences_table` ou `pnpm db:generate --name add_status_to_occurrences`). Garanta migrações atômicas e revise os arquivos SQL em `drizzle/`.
 7. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
 
 ## 3. Regra Mandatória: Barrel Exports (`index.ts`)

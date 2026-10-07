@@ -1,124 +1,135 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Mapeia Focos — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend da plataforma **Mapeia Focos**, desenvolvida para mapeamento e gestão de focos de dengue e zoonoses, oferecendo suporte para cidadãos, agentes de campo e gestores públicos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🛠️ Stack Tecnológica
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Runtime & Linguagem:** [Node.js](https://nodejs.org/) (>= 24.0.0) com [TypeScript](https://www.typescriptlang.org/)
+- **Framework Web:** [NestJS](https://nestjs.com/) v12
+- **ORM & Migrations:** [Drizzle ORM](https://orm.drizzle.team/) & [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview)
+- **Banco de Dados:** [PostgreSQL](https://www.postgresql.org/) (via Docker)
+- **Gerenciador de Pacotes:** [pnpm](https://pnpm.io/) (>= 10.0.0)
+- **Validação:** [class-validator](https://github.com/typestack/class-validator) & [class-transformer](https://github.com/typestack/class-transformer)
+- **Linter & Formatador:** [Oxlint](https://oxc.rs/) & [Prettier](https://prettier.io/)
 
-## Project setup
+---
+
+## 🚀 Como Rodar o Projeto
+
+### Pré-requisitos
+- [Node.js](https://nodejs.org/) (>= 24.0.0)
+- [pnpm](https://pnpm.io/) (>= 10.0.0)
+- [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/)
+
+### 1. Clonar e Instalar Dependências
 
 ```bash
-$ pnpm install
+# Clone o repositório
+git clone https://github.com/vortex-ifal/mapeia-focos-backend.git
+cd mapeia-focos-banckend
+
+# Instale as dependências
+pnpm install
 ```
 
-## Compile and run the project
+### 2. Configurar Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto a partir do modelo [.env.example](file://.env.example):
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+Ajuste as variáveis no `.env` se necessário:
+```env
+# POSTGRES
+POSTGRES_USER=mapeia_focos
+POSTGRES_PASSWORD=12345678
+POSTGRES_DB=mapeia_focos
+POSTGRES_PORT=5432
+
+# APP
+PORT=8000
+DATABASE_URL=postgresql://mapeia_focos:12345678@localhost:5432/mapeia_focos
+```
+
+### 3. Subir o Banco de Dados
+
+Suba o container do PostgreSQL em background:
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm db:up
 ```
 
-## Deployment
+### 4. Gerenciar e Executar Migrações do Banco
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Para criar novas migrações a partir de alterações nos schemas:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Formato padrão (sempre use a flag --name com nome descritivo em snake_case):
+pnpm db:generate --name <nome_da_migration>
+
+# Exemplo:
+pnpm db:generate --name create_occurrences_table
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+> **Boas Práticas para Migrations:**
+> - **Sempre forneça um nome explícito com `--name`:** Evite nomes genéricos ou hashes automáticos. O nome deve descrever com clareza o que a migração altera no banco (ex: `create_users_table`, `add_status_to_occurrences`, `create_locations_table`).
+> - **Migrações Atômicas e Focadas:** Agrupe mudanças relacionadas na mesma migration (ex: criação de uma tabela e seus índices/chaves estrangeiras), evitando misturar alterações de múltiplos domínios não correlatos.
+> - **Verifique o SQL gerado:** Sempre revise o arquivo `.sql` gerado dentro da pasta `drizzle/` antes de aplicar em outros ambientes.
 
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project:
+Aplique os schemas e migrações no banco de dados via Drizzle:
 
 ```bash
-$ pnpm install @nestjs/observe
+# Aplicar migrações pendentes
+pnpm db:migrate
+
+# Ou para sincronização direta em desenvolvimento local:
+pnpm db:push
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/overview) - it takes a single import and an app key.
+*(Opcional)* Para abrir a interface visual do Drizzle Studio:
+```bash
+pnpm db:studio
+```
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+### 5. Iniciar a Aplicação
 
-## Resources
+```bash
+# Modo de desenvolvimento com hot-reload
+pnpm dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# Modo de produção
+pnpm build
+pnpm prod
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+O servidor estará disponível por padrão em `http://localhost:8000/api`.
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 📜 Scripts Disponíveis
 
-## Stay in touch
+| Script | Descrição |
+| --- | --- |
+| `pnpm dev` | Inicia o servidor em modo de desenvolvimento (watch mode) |
+| `pnpm build` | Compila o projeto TypeScript para JavaScript (`dist/`) |
+| `pnpm prod` | Executa a build de produção compilada |
+| `pnpm lint` | Executa o Oxlint com validação de tipos |
+| `pnpm format` | Formata o código com Prettier |
+| `pnpm db:up` | Sobe o container PostgreSQL via Docker Compose |
+| `pnpm db:generate --name <nome_da_migration>` | Gera novos arquivos de migração com Drizzle Kit |
+| `pnpm db:migrate` | Executa migrações pendentes no banco |
+| `pnpm db:push` | Sincroniza o schema diretamente com o banco de dados |
+| `pnpm db:studio` | Inicia a interface visual do Drizzle Studio |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## 📚 Documentação do Projeto
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Para consultar a modelagem de dados, arquitetura e padrões adotados no projeto, veja os documentos dedicados:
+
+- **[Diagrama Entidade-Relacionamento (DER)](./docs/diagrams/der-mapeia-focos.md)**: Modelagem oficial do banco de dados (tabelas, colunas, enums e relacionamentos).
+- **[Diretrizes e Padrões do Backend (AGENTS.md)](./AGENTS.md)**: Regras de Clean Architecture + MVC, organização de camadas (`controllers`, `services`, `entities`, `mappers`, `repositories`), regras de negócio e barrel exports (`index.ts`).
