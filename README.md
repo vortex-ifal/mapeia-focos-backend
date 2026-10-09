@@ -10,7 +10,7 @@ Backend da plataforma **Mapeia Focos**, desenvolvida para mapeamento e gestão d
 - **Framework Web:** [NestJS](https://nestjs.com/) v12
 - **ORM & Migrations:** [Drizzle ORM](https://orm.drizzle.team/) & [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview)
 - **Banco de Dados:** [PostgreSQL](https://www.postgresql.org/) (via Docker)
-- **Gerenciador de Pacotes:** [pnpm](https://pnpm.io/) (>= 10.0.0)
+- **Gerenciador de Pacotes:** [pnpm](https://pnpm.io/) (>= 12.0.0)
 - **Validação:** [class-validator](https://github.com/typestack/class-validator) & [class-transformer](https://github.com/typestack/class-transformer)
 - **Linter & Formatador:** [Oxlint](https://oxc.rs/) & [Prettier](https://prettier.io/)
 
@@ -20,7 +20,7 @@ Backend da plataforma **Mapeia Focos**, desenvolvida para mapeamento e gestão d
 
 ### Pré-requisitos
 - [Node.js](https://nodejs.org/) (>= 24.0.0)
-- [pnpm](https://pnpm.io/) (>= 10.0.0)
+- [pnpm](https://pnpm.io/) (>= 12.0.0)
 - [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/)
 
 ### 1. Clonar e Instalar Dependências
