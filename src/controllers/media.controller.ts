@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   HttpCode,
@@ -35,9 +36,13 @@ export class MediaController {
     @Param('id') occurrenceId: string,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<UploadMediaResponseDto[]> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('Nenhum arquivo enviado');
+    }
+
     const results: UploadMediaResponseDto[] = [];
 
-    for (const file of files || []) {
+    for (const file of files) {
       const entity = await this.mediaService.uploadMedia(occurrenceId, file);
       results.push(this.mediaMapper.toDto(entity));
     }
