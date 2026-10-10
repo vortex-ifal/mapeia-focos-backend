@@ -9,4 +9,8 @@ export class OccurrenceService {
   async create(entity: OccurrenceEntity): Promise<OccurrenceEntity> {
     return this.occurrencesRepository.create(entity);
   }
+
+  async findById(id: string): Promise<OccurrenceEntity | null> {
+    return this.occurrencesRepository.findById(id);
+  }
 }

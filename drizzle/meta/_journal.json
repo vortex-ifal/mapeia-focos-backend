@@ -15,6 +15,13 @@
       "when": 1791316352970,
       "tag": "20261006195232_create_occurrences_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791662768571,
+      "tag": "20261010200608_create_media_table",
+      "breakpoints": true
     }
   ]
 }
