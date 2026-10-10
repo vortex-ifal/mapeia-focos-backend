@@ -149,7 +149,7 @@ erDiagram
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade `STATUS_HISTORY` para auditoria completa de mudanças |
-| Mídias | Entidade `MEDIA` separada com flag `is_public` (privacidade — RN03) |
+| Mídias | Entidade `MEDIA` separada com flag `is_public` (privacidade — RN03). O atributo conceitual `url` é persistido como `storage_key` no banco para armazenar a chave privada do Cloudflare R2; o acesso é intermediado via Presigned URLs com expiração curta. |
 | Atribuição | Entidade `ASSIGNMENT` registrando gestor, agente e data |
 | Localização | Entidade `LOCATION` separada (GPS ou manual — RF05) |
 | Notificações | Entidade `NOTIFICATION` com status de leitura |
