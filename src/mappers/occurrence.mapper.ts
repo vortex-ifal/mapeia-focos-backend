@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { OccurrenceBuilder, OccurrenceEntity, OccurrenceStatus } from '../entities';
+import {
+  OccurrenceBuilder,
+  OccurrenceEntity,
+  OccurrenceStatus,
+} from '../entities';
 import { CreatedResponseDto, CreateOccurrenceDto } from '../dtos';
 import { OccurrenceInsert, OccurrenceSelect } from '../infra';
 
@@ -11,6 +15,7 @@ export class OccurrenceMapper {
       .withDescription(dto.description)
       .withSituationType(dto.situation_type)
       .withContact(dto.contact)
+      .withCoordinates(dto.latitude, dto.longitude)
       .withStatus('pending')
       .withIsAnonymous(true)
       .build();
@@ -29,6 +34,8 @@ export class OccurrenceMapper {
       description: entity.description,
       situationType: entity.situationType ?? null,
       contact: entity.contact ?? null,
+      latitude: entity.latitude,
+      longitude: entity.longitude,
       status: entity.status,
       isAnonymous: entity.isAnonymous,
       reportedByUserId: entity.reportedByUserId ?? null,
@@ -42,6 +49,7 @@ export class OccurrenceMapper {
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withContact(row.contact)
+      .withCoordinates(row.latitude, row.longitude)
       .withStatus(row.status as OccurrenceStatus)
       .withIsAnonymous(row.isAnonymous)
       .withReportedByUserId(row.reportedByUserId)

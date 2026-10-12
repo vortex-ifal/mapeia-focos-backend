@@ -8,6 +8,8 @@ export class OccurrenceBuilder {
     this.props = {
       address: '',
       description: '',
+      latitude: null,
+      longitude: null,
       status: 'pending',
       isAnonymous: true,
     };
@@ -42,6 +44,12 @@ export class OccurrenceBuilder {
     return this;
   }
 
+  withCoordinates(latitude?: number | null, longitude?: number | null): this {
+    this.props.latitude = latitude;
+    this.props.longitude = longitude;
+    return this;
+  }
+
   withStatus(status: OccurrenceStatus): this {
     this.props.status = status;
     return this;
@@ -73,6 +81,21 @@ export class OccurrenceBuilder {
     }
     if (!this.props.description || this.props.description.trim().length === 0) {
       throw new Error('Description is required to build an OccurrenceEntity');
+    }
+
+    const { latitude, longitude } = this.props;
+
+    if (latitude != null && longitude == null) {
+      throw new Error('Longitude is required when latitude is provided');
+    }
+    if (longitude != null && latitude == null) {
+      throw new Error('Latitude is required when longitude is provided');
+    }
+    if (latitude != null && (latitude < -90 || latitude > 90)) {
+      throw new Error('Latitude must be between -90 and 90');
+    }
+    if (longitude != null && (longitude < -180 || longitude > 180)) {
+      throw new Error('Longitude must be between -180 and 180');
     }
 
     // Invariante de negócio: se for anônimo, não deve ter reportedByUserId
