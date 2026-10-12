@@ -3,11 +3,13 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -32,6 +34,7 @@ const PRESIGNED_URL_EXPIRES_IN = 900; // 15 minutos em segundos
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   private readonly bucket: string;
 
   constructor(
@@ -72,8 +75,6 @@ export class MediaService {
     }
 
     // WebP: RIFF .... WEBP
-    // bytes 0-3: 'RIFF' (0x52 0x49 0x46 0x46)
-    // bytes 8-11: 'WEBP' (0x57 0x45 0x42 0x50)
     if (
       buffer[0] === 0x52 &&
       buffer[1] === 0x49 &&
@@ -102,25 +103,17 @@ export class MediaService {
       );
     }
 
-    // 2. Verificar se a ocorrência existe
+    // 2. Verificar previamente se a ocorrência existe (fail-fast antes do upload S3)
     const occurrence = await this.occurrenceService.findById(occurrenceId);
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada');
     }
 
-    // 3. Validar limite de mídias por ocorrência (máximo 3)
-    const currentCount =
-      await this.mediaRepository.countByOccurrenceId(occurrenceId);
-    if (currentCount >= MAX_FILES_PER_OCCURRENCE) {
-      throw new BadRequestException(
-        `Limite de ${MAX_FILES_PER_OCCURRENCE} mídias por ocorrência atingido`,
-      );
-    }
-
-    // 4. Montar storageKey com extensão segura derivada do MIME validado
+    // 3. Montar storageKey com extensão segura derivada do MIME validado
     const extension = EXTENSION_BY_MIME[detectedMimeType];
     const storageKey = `occurrences/${occurrenceId}/${randomUUID()}.${extension}`;
 
+    // 4. Upload para o Cloudflare R2
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucket,
@@ -130,7 +123,7 @@ export class MediaService {
       }),
     );
 
-    // 5. Persistir metadados na base de dados
+    // 5. Montar entidade de domínio
     const mediaEntity = MediaBuilder.create()
       .withOccurrenceId(occurrenceId)
       .withStorageKey(storageKey)
@@ -139,7 +132,30 @@ export class MediaService {
       .withType('photo')
       .build();
 
-    return this.mediaRepository.create(mediaEntity);
+    // 6. Persistir com validação atômica de limite e rollback no R2 caso falhe
+    try {
+      return await this.mediaRepository.createWithLimit(
+        mediaEntity,
+        occurrenceId,
+        MAX_FILES_PER_OCCURRENCE,
+      );
+    } catch (error) {
+      // Deleta o objeto no R2 para evitar arquivos órfãos caso o insert falhe ou o limite seja atingido
+      try {
+        await this.s3.send(
+          new DeleteObjectCommand({
+            Bucket: this.bucket,
+            Key: storageKey,
+          }),
+        );
+      } catch (cleanupError) {
+        this.logger.error(
+          `Falha ao limpar objeto órfão ${storageKey} no bucket ${this.bucket}: ${cleanupError}`,
+        );
+      }
+
+      throw error;
+    }
   }
 
   async getSignedUrl(
