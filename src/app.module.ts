@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './infra';
-import { OccurrencesModule } from './modules';
+import { DatabaseModule, StorageModule } from './infra';
+import { MediaModule, OccurrencesModule } from './modules';
 
 @Module({
   imports: [
@@ -9,7 +9,9 @@ import { OccurrencesModule } from './modules';
       isGlobal: true,
     }),
     DatabaseModule,
+    StorageModule,
     OccurrencesModule,
+    MediaModule,
   ],
   controllers: [],
   providers: [],

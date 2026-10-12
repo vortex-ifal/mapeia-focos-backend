@@ -59,7 +59,7 @@ erDiagram
     MEDIA["MEDIA (Mídia)"] {
         uuid id PK
         uuid occurrence_id FK
-        string url
+        string storage_key
         enum type "photo | video"
         string mime_type
         bigint file_size_bytes
@@ -149,7 +149,7 @@ erDiagram
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade `STATUS_HISTORY` para auditoria completa de mudanças |
-| Mídias | Entidade `MEDIA` separada com flag `is_public` (privacidade — RN03) |
+| Mídias | Entidade `MEDIA` separada com `storage_key` e flag `is_public` (privacidade — RN03). Armazena a chave privada do Cloudflare R2; o acesso é intermediado via Presigned URLs com expiração curta. |
 | Atribuição | Entidade `ASSIGNMENT` registrando gestor, agente e data |
 | Localização | Entidade `LOCATION` separada (GPS ou manual — RF05) |
 | Notificações | Entidade `NOTIFICATION` com status de leitura |
