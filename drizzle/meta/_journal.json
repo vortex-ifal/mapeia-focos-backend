@@ -22,6 +22,13 @@
       "when": 1791662768571,
       "tag": "20261010200608_create_media_table",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791730839812,
+      "tag": "20261011150039_add_coordinates_to_occurrences",
+      "breakpoints": true
     }
   ]
 }

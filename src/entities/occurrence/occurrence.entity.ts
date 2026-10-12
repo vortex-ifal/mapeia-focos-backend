@@ -6,6 +6,8 @@ export class OccurrenceEntity {
   private readonly _description: string;
   private readonly _situationType?: string | null;
   private readonly _contact?: string | null;
+  private readonly _latitude: number | null;
+  private readonly _longitude: number | null;
   private readonly _status: OccurrenceStatus;
   private readonly _isAnonymous: boolean;
   private readonly _reportedByUserId?: string | null;
@@ -18,6 +20,8 @@ export class OccurrenceEntity {
     this._description = props.description;
     this._situationType = props.situationType ?? null;
     this._contact = props.contact ?? null;
+    this._latitude = props.latitude ?? null;
+    this._longitude = props.longitude ?? null;
     this._status = props.status ?? 'pending';
     this._isAnonymous = props.isAnonymous ?? true;
     this._reportedByUserId = props.reportedByUserId ?? null;
@@ -43,6 +47,14 @@ export class OccurrenceEntity {
 
   get contact(): string | null | undefined {
     return this._contact;
+  }
+
+  get latitude(): number | null {
+    return this._latitude;
+  }
+
+  get longitude(): number | null {
+    return this._longitude;
   }
 
   get status(): OccurrenceStatus {
