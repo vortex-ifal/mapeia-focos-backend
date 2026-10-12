@@ -109,11 +109,20 @@ export class MediaService {
       throw new NotFoundException('Ocorrência não encontrada');
     }
 
-    // 3. Montar storageKey com extensão segura derivada do MIME validado
+    // 3. Pré-checagem rápida de limite para evitar upload e tráfego desnecessário no R2
+    const currentCount =
+      await this.mediaRepository.countByOccurrenceId(occurrenceId);
+    if (currentCount >= MAX_FILES_PER_OCCURRENCE) {
+      throw new BadRequestException(
+        `Limite de ${MAX_FILES_PER_OCCURRENCE} mídias por ocorrência atingido`,
+      );
+    }
+
+    // 4. Montar storageKey com extensão segura derivada do MIME validado
     const extension = EXTENSION_BY_MIME[detectedMimeType];
     const storageKey = `occurrences/${occurrenceId}/${randomUUID()}.${extension}`;
 
-    // 4. Upload para o Cloudflare R2
+    // 5. Upload para o Cloudflare R2
     await this.s3.send(
       new PutObjectCommand({
         Bucket: this.bucket,
