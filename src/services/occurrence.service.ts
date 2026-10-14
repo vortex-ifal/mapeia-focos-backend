@@ -13,4 +13,8 @@ export class OccurrenceService {
   async findById(id: string): Promise<OccurrenceEntity | null> {
     return this.occurrencesRepository.findById(id);
   }
+
+  async softDelete(id: string): Promise<boolean> {
+    return this.occurrencesRepository.softDelete(id);
+  }
 }

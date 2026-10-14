@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { OccurrenceEntity } from '../entities';
 import { DRIZZLE_PROVIDER, type DrizzleDB, occurrencesTable } from '../infra';
 import { OccurrenceMapper } from '../mappers';
@@ -27,7 +27,12 @@ export class OccurrencesRepository {
     const [row] = await this.db
       .select()
       .from(occurrencesTable)
-      .where(eq(occurrencesTable.id, id))
+      .where(
+        and(
+          eq(occurrencesTable.id, id),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
       .limit(1);
 
     if (!row) {
@@ -36,4 +41,23 @@ export class OccurrencesRepository {
 
     return this.mapper.toDomainFromPersistence(row);
   }
+
+  async softDelete(id: string): Promise<boolean> {
+    const [updated] = await this.db
+      .update(occurrencesTable)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(occurrencesTable.id, id),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
+      .returning({ id: occurrencesTable.id });
+
+    return !!updated;
+  }
 }
+

@@ -35,6 +35,7 @@ export const occurrencesTable = pgTable(
     longitude: numeric('longitude', { precision: 9, scale: 6, mode: 'number' }),
     status: occurrenceStatusEnum('status').default('pending').notNull(),
     isAnonymous: boolean('is_anonymous').default(true).notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
     reportedByUserId: uuid('reported_by_user_id').references(
       () => usersTable.id,
       {

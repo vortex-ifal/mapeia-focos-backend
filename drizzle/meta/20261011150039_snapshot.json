@@ -1,6 +1,6 @@
 {
   "id": "d88bb7ad-ef15-452d-a172-8e5027bf13e1",
-  "prevId": "759729a7-9093-4362-96ad-01e3fc5206fd",
+  "prevId": "3d7653a3-426f-4b43-a1b7-7db883ed6bfc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -205,6 +205,86 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.media": {
+      "name": "media",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "occurrence_id": {
+          "name": "occurrence_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage_key": {
+          "name": "storage_key",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_size_bytes": {
+          "name": "file_size_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "media_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'photo'"
+        },
+        "is_public": {
+          "name": "is_public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "uploaded_at": {
+          "name": "uploaded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "media_occurrence_id_occurrences_id_fk": {
+          "name": "media_occurrence_id_occurrences_id_fk",
+          "tableFrom": "media",
+          "tableTo": "occurrences",
+          "columnsFrom": [
+            "occurrence_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -227,6 +307,14 @@
         "citizen",
         "agent",
         "manager"
+      ]
+    },
+    "public.media_type": {
+      "name": "media_type",
+      "schema": "public",
+      "values": [
+        "photo",
+        "video"
       ]
     }
   },

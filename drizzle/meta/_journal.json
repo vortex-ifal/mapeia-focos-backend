@@ -29,6 +29,13 @@
       "when": 1791730839812,
       "tag": "20261011150039_add_coordinates_to_occurrences",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792015394210,
+      "tag": "20261014220314_add_is_active_to_occurrences",
+      "breakpoints": true
     }
   ]
 }

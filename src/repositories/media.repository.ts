@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { count, eq, sql } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import { MediaEntity } from '../entities';
 import { DRIZZLE_PROVIDER, type DrizzleDB, mediaTable, occurrencesTable } from '../infra';
 import { MediaMapper } from '../mappers';
@@ -42,7 +42,12 @@ export class MediaRepository {
       const [occurrence] = await tx
         .select({ id: occurrencesTable.id })
         .from(occurrencesTable)
-        .where(eq(occurrencesTable.id, occurrenceId))
+        .where(
+          and(
+            eq(occurrencesTable.id, occurrenceId),
+            eq(occurrencesTable.isActive, true),
+          ),
+        )
         .for('update');
 
       if (!occurrence) {

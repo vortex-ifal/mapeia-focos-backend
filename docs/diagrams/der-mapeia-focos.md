@@ -24,6 +24,7 @@ erDiagram
         string description
         enum status "pending | validated | discarded | assigned | inspected | resolved"
         boolean is_anonymous
+        boolean is_active
         uuid reported_by_user_id FK
         uuid location_id FK
         uuid property_id FK
