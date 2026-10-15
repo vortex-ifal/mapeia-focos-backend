@@ -26,6 +26,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 5. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
 6. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
    - **Boas Práticas de Migrations:** Ao gerar novas migrações, **sempre utilize a flag `--name`** com um nome descritivo em `snake_case` (ex: `pnpm db:generate --name create_occurrences_table` ou `pnpm db:generate --name add_status_to_occurrences`). Garanta migrações atômicas e revise os arquivos SQL em `drizzle/`.
+   - **Idempotência de Seeds (Sem TRUNCATE):** A implementação de seeds **NUNCA deve utilizar `TRUNCATE`** ou apagar dados existentes das tabelas. Utilize sempre operações de Upsert idempotentes (`onConflictDoNothing` ou `onConflictDoUpdate`) para que possam ser executadas com segurança em deploys/pre-steps sem perda de dados de teste ou produção.
 7. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
 
 ## 3. Regra Mandatória: Barrel Exports (`index.ts`)
