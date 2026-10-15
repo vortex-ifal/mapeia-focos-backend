@@ -36,6 +36,13 @@
       "when": 1792015394210,
       "tag": "20261014220314_add_is_active_to_occurrences",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792092671650,
+      "tag": "20261015193111_remove_contact_from_occurrences",
+      "breakpoints": true
     }
   ]
 }

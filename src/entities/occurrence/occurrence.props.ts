@@ -11,7 +11,7 @@ export interface OccurrenceProps {
   address: string;
   description: string;
   situationType?: string | null;
-  contact?: string | null;
+
   latitude?: number | null;
   longitude?: number | null;
   status?: OccurrenceStatus;

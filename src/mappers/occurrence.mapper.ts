@@ -14,7 +14,6 @@ export class OccurrenceMapper {
       .withAddress(dto.address)
       .withDescription(dto.description)
       .withSituationType(dto.situation_type)
-      .withContact(dto.contact)
       .withCoordinates(dto.latitude, dto.longitude)
       .withStatus('pending')
       .withIsAnonymous(true)
@@ -33,7 +32,6 @@ export class OccurrenceMapper {
       address: entity.address,
       description: entity.description,
       situationType: entity.situationType ?? null,
-      contact: entity.contact ?? null,
       latitude: entity.latitude,
       longitude: entity.longitude,
       status: entity.status,
@@ -48,7 +46,6 @@ export class OccurrenceMapper {
       .withAddress(row.address)
       .withDescription(row.description)
       .withSituationType(row.situationType)
-      .withContact(row.contact)
       .withCoordinates(row.latitude, row.longitude)
       .withStatus(row.status as OccurrenceStatus)
       .withIsAnonymous(row.isAnonymous)

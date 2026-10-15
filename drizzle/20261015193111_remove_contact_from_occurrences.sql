@@ -1,0 +1,1 @@
+ALTER TABLE "occurrences" DROP COLUMN "contact";

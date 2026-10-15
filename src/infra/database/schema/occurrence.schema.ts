@@ -30,7 +30,6 @@ export const occurrencesTable = pgTable(
     address: varchar('address', { length: 255 }).notNull(),
     description: text('description').notNull(),
     situationType: varchar('situation_type', { length: 100 }),
-    contact: varchar('contact', { length: 150 }),
     latitude: numeric('latitude', { precision: 9, scale: 6, mode: 'number' }),
     longitude: numeric('longitude', { precision: 9, scale: 6, mode: 'number' }),
     status: occurrenceStatusEnum('status').default('pending').notNull(),

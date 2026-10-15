@@ -39,10 +39,6 @@ export class OccurrenceBuilder {
     return this;
   }
 
-  withContact(contact?: string | null): this {
-    this.props.contact = contact;
-    return this;
-  }
 
   withCoordinates(latitude?: number | null, longitude?: number | null): this {
     this.props.latitude = latitude;

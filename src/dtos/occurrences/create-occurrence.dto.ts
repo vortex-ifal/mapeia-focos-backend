@@ -39,13 +39,6 @@ export class CreateOccurrenceDto {
   @IsOptional()
   situation_type?: string;
 
-  @ApiPropertyOptional({
-    description: 'Telefone ou contato do cidadão (opcional)',
-    example: '(11) 98765-4321',
-  })
-  @IsString({ message: 'O contato deve ser uma string' })
-  @IsOptional()
-  contact?: string;
 
   // Se um dos dois for enviado, os dois passam a ser obrigatórios
   @ApiPropertyOptional({
