@@ -5,9 +5,9 @@ export class UserEntity {
   private readonly _id?: string;
   private readonly _name: string;
   private readonly _email: string;
-  private readonly _password: string;
+  private _password: string;
   private readonly _cpf: string;
-  private readonly _role?: RoleEntity;
+  private _role?: RoleEntity;
   private readonly _isActive: boolean;
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
@@ -40,12 +40,20 @@ export class UserEntity {
     return this._password;
   }
 
+  set password(password: string) {
+    this._password = password;
+  }
+
   get cpf(): string {
     return this._cpf;
   }
 
   get role(): RoleEntity | undefined {
     return this._role;
+  }
+
+  set role(role: RoleEntity | undefined) {
+    this._role = role;
   }
 
   get isActive(): boolean {

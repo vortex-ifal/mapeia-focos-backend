@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { UserBuilder, UserEntity } from '../entities';
+import { UserEntity } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
 
@@ -40,17 +40,11 @@ export class UserService {
 
     const passwordHash = await this.cryptoService.hash(rawPassword);
 
-    const entityWithHash = UserBuilder.create()
-      .withName(entity.name)
-      .withEmail(entity.email)
-      .withPassword(passwordHash)
-      .withCpf(entity.cpf)
-      .withRole(role)
-      .withIsActive(entity.isActive)
-      .build();
+    entity.role = role;
+    entity.password = passwordHash;
 
     try {
-      return await this.usersRepository.create(entityWithHash);
+      return await this.usersRepository.create(entity);
     } catch (error) {
       // Trata race condition: em requisições simultâneas com mesmo e-mail ou CPF,
       // as checagens acima podem passar, mas o banco rejeita com o SQLSTATE '23505' (unique_violation).
