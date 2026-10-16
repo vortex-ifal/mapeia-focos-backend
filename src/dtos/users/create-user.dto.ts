@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsCpf } from '../../common';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -55,5 +56,6 @@ export class CreateUserDto {
   @IsString({ message: 'O CPF deve ser uma string' })
   @IsNotEmpty({ message: 'O CPF é obrigatório' })
   @Length(11, 11, { message: 'O CPF deve conter exatamente 11 dígitos' })
+  @IsCpf({ message: 'O CPF informado é inválido' })
   cpf: string;
 }
