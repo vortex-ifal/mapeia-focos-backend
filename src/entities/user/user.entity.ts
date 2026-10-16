@@ -5,7 +5,7 @@ export class UserEntity {
   private readonly _name: string;
   private readonly _email: string;
   private readonly _password: string;
-  private readonly _cpf?: string | null;
+  private readonly _cpf: string;
   private readonly _role: UserRole;
   private readonly _isActive: boolean;
   private readonly _createdAt?: Date;
@@ -16,7 +16,7 @@ export class UserEntity {
     this._name = props.name;
     this._email = props.email;
     this._password = props.password;
-    this._cpf = props.cpf ?? null;
+    this._cpf = props.cpf;
     this._role = props.role ?? 'citizen';
     this._isActive = props.isActive ?? true;
     this._createdAt = props.createdAt;
@@ -39,7 +39,7 @@ export class UserEntity {
     return this._password;
   }
 
-  get cpf(): string | null | undefined {
+  get cpf(): string {
     return this._cpf;
   }
 

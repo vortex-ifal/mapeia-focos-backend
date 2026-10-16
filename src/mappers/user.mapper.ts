@@ -10,7 +10,7 @@ export class UserMapper {
       .withName(dto.name.trim())
       .withEmail(dto.email.trim().toLowerCase())
       .withPassword(dto.password)
-      .withCpf(dto.cpf ?? null)
+      .withCpf(dto.cpf)
       .withRole('citizen')
       .withIsActive(true)
       .build();
@@ -28,7 +28,7 @@ export class UserMapper {
       name: entity.name,
       email: entity.email,
       passwordHash: entity.password,
-      cpf: entity.cpf ?? null,
+      cpf: entity.cpf,
       role: entity.role,
       isActive: entity.isActive,
     };
@@ -40,7 +40,7 @@ export class UserMapper {
       .withName(row.name)
       .withEmail(row.email)
       .withPassword(row.passwordHash)
-      .withCpf(row.cpf)
+      .withCpf(row.cpf ?? '')
       .withRole(row.role as UserRole)
       .withIsActive(row.isActive)
       .withCreatedAt(row.createdAt)

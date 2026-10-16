@@ -18,11 +18,9 @@ export class UserService {
       throw new ConflictException('E-mail já cadastrado no sistema');
     }
 
-    if (entity.cpf) {
-      const existingByCpf = await this.usersRepository.findByCpf(entity.cpf);
-      if (existingByCpf) {
-        throw new ConflictException('CPF já cadastrado no sistema');
-      }
+    const existingByCpf = await this.usersRepository.findByCpf(entity.cpf);
+    if (existingByCpf) {
+      throw new ConflictException('CPF já cadastrado no sistema');
     }
 
     const rawPassword = entity.password;

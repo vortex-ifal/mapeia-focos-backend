@@ -1,8 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Length,
   MaxLength,
@@ -46,15 +45,15 @@ export class CreateUserDto {
   @MaxLength(72, { message: 'A senha deve conter no máximo 72 caracteres' })
   password: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CPF do usuário (11 dígitos numéricos)',
     example: '12345678901',
     minLength: 11,
     maxLength: 11,
   })
   @Transform(({ value }: { value?: string }) => value?.replace(/\D/g, ''))
-  @IsOptional()
   @IsString({ message: 'O CPF deve ser uma string' })
+  @IsNotEmpty({ message: 'O CPF é obrigatório' })
   @Length(11, 11, { message: 'O CPF deve conter exatamente 11 dígitos' })
-  cpf?: string;
+  cpf: string;
 }

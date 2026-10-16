@@ -9,6 +9,7 @@ export class UserBuilder {
       name: '',
       email: '',
       password: '',
+      cpf: '',
       role: 'citizen',
       isActive: true,
     };
@@ -38,7 +39,7 @@ export class UserBuilder {
     return this;
   }
 
-  withCpf(cpf?: string | null): this {
+  withCpf(cpf: string): this {
     this.props.cpf = cpf;
     return this;
   }
@@ -72,6 +73,9 @@ export class UserBuilder {
     }
     if (!this.props.password || this.props.password.trim().length === 0) {
       throw new Error('Password is required to build a UserEntity');
+    }
+    if (!this.props.cpf || this.props.cpf.trim().length === 0) {
+      throw new Error('CPF is required to build a UserEntity');
     }
 
     return new UserEntity(this.props);
