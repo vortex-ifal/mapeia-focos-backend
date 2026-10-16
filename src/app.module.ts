@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule, StorageModule } from './infra';
-import { MediaModule, OccurrencesModule } from './modules';
+import { CryptoModule, DatabaseModule, StorageModule } from './infra';
+import { MediaModule, OccurrencesModule, UsersModule } from './modules';
 
 @Module({
   imports: [
@@ -10,8 +10,10 @@ import { MediaModule, OccurrencesModule } from './modules';
     }),
     DatabaseModule,
     StorageModule,
+    CryptoModule,
     OccurrencesModule,
     MediaModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
