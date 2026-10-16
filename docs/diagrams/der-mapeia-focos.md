@@ -7,13 +7,18 @@
 ```mermaid
 erDiagram
 
+    ROLE["ROLE (Perfil)"] {
+        uuid id PK
+        string name UK
+    }
+
     USER["USER (Usuário)"] {
         uuid id PK
         string name
-        string cpf
-        string email
+        string cpf UK
+        string email UK
         string password_hash
-        enum role "citizen | agent | manager"
+        uuid role_id FK
         boolean is_active
         timestamp created_at
         timestamp updated_at
@@ -120,6 +125,7 @@ erDiagram
     }
 
     %% ── Relacionamentos ──────────────────────────────────────
+    ROLE ||--o{ USER                : "defines permissions for"
 
     USER ||--o{ OCCURRENCE          : "reports (citizen)"
     LOCATION ||--|| OCCURRENCE      : "locates"
@@ -146,7 +152,7 @@ erDiagram
 
 | Decisão | Escolha |
 |---|---|
-| Perfis de usuário | Entidade `USER` com enum `role` (citizen / agent / manager) |
+| Perfis de usuário | Tabela `ROLE` relacional com `name` único (`citizen`, `agent`, `manager`), vinculada à tabela `USER` via `role_id` |
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade `STATUS_HISTORY` para auditoria completa de mudanças |
@@ -163,6 +169,7 @@ erDiagram
 
 | Entidade | RF cobertos | Ator principal |
 |---|---|---|
+| `ROLE` | RF01, RN11 | Sistema |
 | `USER` | RF01, RN11 | Todos |
 | `OCCURRENCE` | RF02, RF05, RF06, RF08, RF16 | Cidadão |
 | `LOCATION` | RF05, RF06, RF14 | Cidadão |

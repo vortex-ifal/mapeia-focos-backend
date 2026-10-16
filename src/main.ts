@@ -30,6 +30,7 @@ async function bootstrap() {
     .setVersion('0.1.0')
     .addTag('Occurrences', 'Registro e acompanhamento de ocorrências e focos')
     .addTag('Media', 'Upload e recuperação de arquivos de mídia vinculados a ocorrências')
+    .addTag('Users', 'Gerenciamento e cadastro de usuários')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

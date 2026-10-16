@@ -123,7 +123,22 @@ O servidor estará disponível por padrão em `http://localhost:8000/api`.
 | `pnpm db:generate --name <nome_da_migration>` | Gera novos arquivos de migração com Drizzle Kit |
 | `pnpm db:migrate` | Executa migrações pendentes no banco |
 | `pnpm db:push` | Sincroniza o schema diretamente com o banco de dados |
+| `pnpm db:seed` | Popula o banco com as roles e os usuários padrão de desenvolvimento |
 | `pnpm db:studio` | Inicia a interface visual do Drizzle Studio |
+
+---
+
+## 👥 Usuários de Desenvolvimento (Seed)
+
+Para facilitar o desenvolvimento, testes e autenticação local, execute o seed (`pnpm db:seed`) para disponibilizar os seguintes usuários iniciais pré-cadastrados:
+
+| Role | Nome | E-mail | Senha |
+|---|---|---|---|
+| `citizen` | Cidadão Padrão | `cidadao@email.com` | `Test1234!` |
+| `agent` | Agente de Endemias | `agente@email.com` | `Test1234!` |
+| `manager` | Gestor Geral | `gestor@email.com` | `Test1234!` |
+
+> **Nota:** As senhas são criptografadas com hash `bcrypt`. O comando `pnpm db:seed` é idempotente e pode ser executado múltiplas vezes sem duplicar registros.
 
 ---
 

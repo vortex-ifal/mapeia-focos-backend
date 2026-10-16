@@ -46,3 +46,6 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 
 ## 6. Documentação e Referências
 - **Diagrama ER (DER):** O modelo relacional oficial do banco de dados (tabelas, colunas, enums e relacionamentos) está documentado em `docs/diagrams/der-mapeia-focos.md`.
+
+## 7. Controle de Versão (Git)
+- **Não faça commits sem que seja explicitamente solicitado pelo usuário.** Mantenha as modificações na árvore de trabalho (working tree) prontas para revisão e aguarde a autorização antes de criar qualquer commit.
