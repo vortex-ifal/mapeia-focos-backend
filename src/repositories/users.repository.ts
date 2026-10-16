@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { UserEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, usersTable } from '../infra';
-import { UserMapper } from '../mappers';
+import { DRIZZLE_PROVIDER, type DrizzleDB, rolesTable, usersTable } from '../infra';
+import { RoleMapper, UserMapper } from '../mappers';
 
 @Injectable()
 export class UsersRepository {
@@ -10,6 +10,7 @@ export class UsersRepository {
     @Inject(DRIZZLE_PROVIDER)
     private readonly db: DrizzleDB,
     private readonly mapper: UserMapper,
+    private readonly roleMapper: RoleMapper,
   ) {}
 
   async create(entity: UserEntity): Promise<string> {
@@ -24,44 +25,59 @@ export class UsersRepository {
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
-    const [row] = await this.db
-      .select()
+    const [result] = await this.db
+      .select({
+        user: usersTable,
+        role: rolesTable,
+      })
       .from(usersTable)
+      .innerJoin(rolesTable, eq(usersTable.roleId, rolesTable.id))
       .where(eq(usersTable.email, email))
       .limit(1);
 
-    if (!row) {
+    if (!result) {
       return null;
     }
 
-    return this.mapper.toDomainFromPersistence(row);
+    const role = this.roleMapper.toDomainFromPersistence(result.role);
+    return this.mapper.toDomainFromPersistence(result.user, role);
   }
 
   async findByCpf(cpf: string): Promise<UserEntity | null> {
-    const [row] = await this.db
-      .select()
+    const [result] = await this.db
+      .select({
+        user: usersTable,
+        role: rolesTable,
+      })
       .from(usersTable)
+      .innerJoin(rolesTable, eq(usersTable.roleId, rolesTable.id))
       .where(eq(usersTable.cpf, cpf))
       .limit(1);
 
-    if (!row) {
+    if (!result) {
       return null;
     }
 
-    return this.mapper.toDomainFromPersistence(row);
+    const role = this.roleMapper.toDomainFromPersistence(result.role);
+    return this.mapper.toDomainFromPersistence(result.user, role);
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    const [row] = await this.db
-      .select()
+    const [result] = await this.db
+      .select({
+        user: usersTable,
+        role: rolesTable,
+      })
       .from(usersTable)
+      .innerJoin(rolesTable, eq(usersTable.roleId, rolesTable.id))
       .where(eq(usersTable.id, id))
       .limit(1);
 
-    if (!row) {
+    if (!result) {
       return null;
     }
 
-    return this.mapper.toDomainFromPersistence(row);
+    const role = this.roleMapper.toDomainFromPersistence(result.role);
+    return this.mapper.toDomainFromPersistence(result.user, role);
   }
 }

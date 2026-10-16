@@ -1,5 +1,6 @@
+import { RoleEntity } from '../role';
 import { UserEntity } from './user.entity';
-import { UserProps, UserRole } from './user.props';
+import { UserProps } from './user.props';
 
 export class UserBuilder {
   private props: UserProps;
@@ -10,7 +11,6 @@ export class UserBuilder {
       email: '',
       password: '',
       cpf: '',
-      role: 'citizen',
       isActive: true,
     };
   }
@@ -44,8 +44,8 @@ export class UserBuilder {
     return this;
   }
 
-  withRole(role?: UserRole): this {
-    this.props.role = role ?? 'citizen';
+  withRole(role?: RoleEntity): this {
+    this.props.role = role;
     return this;
   }
 

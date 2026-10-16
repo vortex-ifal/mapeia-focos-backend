@@ -1,4 +1,4 @@
-export type UserRole = 'citizen' | 'agent' | 'manager';
+import { RoleEntity } from '../role';
 
 export interface UserProps {
   id?: string;
@@ -6,7 +6,7 @@ export interface UserProps {
   email: string;
   password: string;
   cpf: string;
-  role?: UserRole;
+  role?: RoleEntity;
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

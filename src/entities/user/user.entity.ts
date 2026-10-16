@@ -1,4 +1,5 @@
-import { UserProps, UserRole } from './user.props';
+import { RoleEntity } from '../role';
+import { UserProps } from './user.props';
 
 export class UserEntity {
   private readonly _id?: string;
@@ -6,7 +7,7 @@ export class UserEntity {
   private readonly _email: string;
   private readonly _password: string;
   private readonly _cpf: string;
-  private readonly _role: UserRole;
+  private readonly _role?: RoleEntity;
   private readonly _isActive: boolean;
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
@@ -17,7 +18,7 @@ export class UserEntity {
     this._email = props.email;
     this._password = props.password;
     this._cpf = props.cpf;
-    this._role = props.role ?? 'citizen';
+    this._role = props.role;
     this._isActive = props.isActive ?? true;
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
@@ -43,7 +44,7 @@ export class UserEntity {
     return this._cpf;
   }
 
-  get role(): UserRole {
+  get role(): RoleEntity | undefined {
     return this._role;
   }
 

@@ -1,12 +1,13 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { UserBuilder, UserEntity } from '../entities';
 import { CryptoService } from '../infra';
-import { UsersRepository } from '../repositories';
+import { RolesRepository, UsersRepository } from '../repositories';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly rolesRepository: RolesRepository,
     private readonly cryptoService: CryptoService,
   ) {}
 
@@ -28,6 +29,15 @@ export class UserService {
       throw new BadRequestException('A senha é obrigatória');
     }
 
+    let role = entity.role;
+    if (!role) {
+      const defaultRole = await this.rolesRepository.findByName('citizen');
+      if (!defaultRole) {
+        throw new BadRequestException('Role padrão "citizen" não encontrada no sistema');
+      }
+      role = defaultRole;
+    }
+
     const passwordHash = await this.cryptoService.hash(rawPassword);
 
     const entityWithHash = UserBuilder.create()
@@ -35,7 +45,7 @@ export class UserService {
       .withEmail(entity.email)
       .withPassword(passwordHash)
       .withCpf(entity.cpf)
-      .withRole(entity.role)
+      .withRole(role)
       .withIsActive(entity.isActive)
       .build();
 
