@@ -43,16 +43,6 @@ export async function seedUsers(db: PostgresJsDatabase<typeof schema>): Promise<
     await db
       .insert(usersTable)
       .values(user)
-      .onConflictDoUpdate({
-        target: usersTable.id,
-        set: {
-          name: user.name,
-          email: user.email,
-          passwordHash: user.passwordHash,
-          cpf: user.cpf,
-          roleId: user.roleId,
-          isActive: user.isActive,
-        },
-      });
+      .onConflictDoNothing({ target: usersTable.id });
   }
 }

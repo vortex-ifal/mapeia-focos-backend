@@ -49,7 +49,23 @@ export class UserService {
       .withIsActive(entity.isActive)
       .build();
 
-    return this.usersRepository.create(entityWithHash);
+    try {
+      return await this.usersRepository.create(entityWithHash);
+    } catch (error) {
+      // Trata race condition: em requisições simultâneas com mesmo e-mail ou CPF,
+      // as checagens acima podem passar, mas o banco rejeita com o SQLSTATE '23505' (unique_violation).
+      // O Drizzle encapsula o erro do driver em `cause`, por isso verificamos ambos os níveis.
+      const code =
+        (error as { code?: string; cause?: { code?: string } })?.code ??
+        (error as { cause?: { code?: string } })?.cause?.code;
+
+      if (code === '23505') {
+        throw new ConflictException('E-mail ou CPF já cadastrado no sistema');
+      }
+
+      // Propaga qualquer outro erro inesperado (ex.: falha de conexão)
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<UserEntity | null> {
