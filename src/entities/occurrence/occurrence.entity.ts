@@ -1,4 +1,5 @@
-import { OccurrenceProps, OccurrenceStatus } from './occurrence.props';
+import { OccurrenceStatusEntity } from '../occurrence-status';
+import { OccurrenceProps } from './occurrence.props';
 
 export class OccurrenceEntity {
   private readonly _id?: string;
@@ -7,7 +8,7 @@ export class OccurrenceEntity {
   private readonly _situationType?: string | null;
   private readonly _latitude: number | null;
   private readonly _longitude: number | null;
-  private readonly _status: OccurrenceStatus;
+  private _status?: OccurrenceStatusEntity;
   private readonly _isAnonymous: boolean;
   private readonly _reportedByUserId?: string | null;
   private readonly _createdAt?: Date;
@@ -20,7 +21,7 @@ export class OccurrenceEntity {
     this._situationType = props.situationType ?? null;
     this._latitude = props.latitude ?? null;
     this._longitude = props.longitude ?? null;
-    this._status = props.status ?? 'pending';
+    this._status = props.status;
     this._isAnonymous = props.isAnonymous ?? true;
     this._reportedByUserId = props.reportedByUserId ?? null;
     this._createdAt = props.createdAt;
@@ -43,7 +44,6 @@ export class OccurrenceEntity {
     return this._situationType;
   }
 
-
   get latitude(): number | null {
     return this._latitude;
   }
@@ -52,8 +52,12 @@ export class OccurrenceEntity {
     return this._longitude;
   }
 
-  get status(): OccurrenceStatus {
+  get status(): OccurrenceStatusEntity | undefined {
     return this._status;
+  }
+
+  set status(status: OccurrenceStatusEntity | undefined) {
+    this._status = status;
   }
 
   get isAnonymous(): boolean {

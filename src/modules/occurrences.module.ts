@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OccurrencesController } from '../controllers';
-import { OccurrenceMapper } from '../mappers';
-import { OccurrencesRepository } from '../repositories';
+import { OccurrenceMapper, OccurrenceStatusMapper } from '../mappers';
+import {
+  OccurrencesRepository,
+  OccurrenceStatusesRepository,
+} from '../repositories';
 import { OccurrenceService } from '../services';
 
 @Module({
@@ -9,8 +12,14 @@ import { OccurrenceService } from '../services';
   providers: [
     OccurrenceService,
     OccurrencesRepository,
+    OccurrenceStatusesRepository,
     OccurrenceMapper,
+    OccurrenceStatusMapper,
   ],
-  exports: [OccurrenceService, OccurrencesRepository],
+  exports: [
+    OccurrenceService,
+    OccurrencesRepository,
+    OccurrenceStatusesRepository,
+  ],
 })
 export class OccurrencesModule {}

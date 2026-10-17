@@ -1,7 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { OccurrenceEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, occurrencesTable } from '../infra';
+import {
+  DRIZZLE_PROVIDER,
+  type DrizzleDB,
+  occurrencesTable,
+  occurrenceStatusesTable,
+} from '../infra';
 import { OccurrenceMapper } from '../mappers';
 
 @Injectable()
@@ -20,13 +25,24 @@ export class OccurrencesRepository {
       .values(data)
       .returning();
 
-    return this.mapper.toDomainFromPersistence(inserted);
+    const created = await this.findById(inserted.id);
+    if (!created) {
+      return this.mapper.toDomainFromPersistence(inserted);
+    }
+    return created;
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {
     const [row] = await this.db
-      .select()
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
       .from(occurrencesTable)
+      .leftJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
       .where(
         and(
           eq(occurrencesTable.id, id),
@@ -39,7 +55,10 @@ export class OccurrencesRepository {
       return null;
     }
 
-    return this.mapper.toDomainFromPersistence(row);
+    return this.mapper.toDomainFromPersistence({
+      ...row.occurrence,
+      status: row.status,
+    });
   }
 
   async softDelete(id: string): Promise<boolean> {

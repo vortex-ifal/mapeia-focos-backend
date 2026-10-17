@@ -2,20 +2,32 @@ import { Injectable } from '@nestjs/common';
 import {
   OccurrenceBuilder,
   OccurrenceEntity,
-  OccurrenceStatus,
+  OccurrenceStatusEntity,
 } from '../entities';
 import { CreatedResponseDto, CreateOccurrenceDto } from '../dtos';
-import { OccurrenceInsert, OccurrenceSelect } from '../infra';
+import {
+  OccurrenceInsert,
+  OccurrenceSelect,
+  OccurrenceStatusSelect,
+} from '../infra';
+import { OccurrenceStatusMapper } from './occurrence-status.mapper';
+
+export type OccurrenceSelectWithStatus = OccurrenceSelect & {
+  status?: OccurrenceStatusSelect | null;
+};
 
 @Injectable()
 export class OccurrenceMapper {
+  constructor(
+    private readonly occurrenceStatusMapper: OccurrenceStatusMapper,
+  ) {}
+
   toDomainFromDto(dto: CreateOccurrenceDto): OccurrenceEntity {
     return OccurrenceBuilder.create()
       .withAddress(dto.address)
       .withDescription(dto.description)
       .withSituationType(dto.situation_type)
       .withCoordinates(dto.latitude, dto.longitude)
-      .withStatus('pending')
       .withIsAnonymous(true)
       .build();
   }
@@ -27,6 +39,13 @@ export class OccurrenceMapper {
   }
 
   toPersistence(entity: OccurrenceEntity): OccurrenceInsert {
+    const statusId = entity.status?.id;
+    if (!statusId) {
+      throw new Error(
+        'A valid status with ID is required to persist an OccurrenceEntity',
+      );
+    }
+
     return {
       ...(entity.id ? { id: entity.id } : {}),
       address: entity.address,
@@ -34,24 +53,37 @@ export class OccurrenceMapper {
       situationType: entity.situationType ?? null,
       latitude: entity.latitude,
       longitude: entity.longitude,
-      status: entity.status,
+      statusId,
       isAnonymous: entity.isAnonymous,
       reportedByUserId: entity.reportedByUserId ?? null,
     };
   }
 
-  toDomainFromPersistence(row: OccurrenceSelect): OccurrenceEntity {
-    return OccurrenceBuilder.create()
+  toDomainFromPersistence(
+    row: OccurrenceSelectWithStatus,
+  ): OccurrenceEntity {
+    let statusEntity: OccurrenceStatusEntity | undefined;
+    if (row.status) {
+      statusEntity = this.occurrenceStatusMapper.toDomainFromPersistence(
+        row.status,
+      );
+    }
+
+    const builder = OccurrenceBuilder.create()
       .withId(row.id)
       .withAddress(row.address)
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
-      .withStatus(row.status as OccurrenceStatus)
       .withIsAnonymous(row.isAnonymous)
       .withReportedByUserId(row.reportedByUserId)
       .withCreatedAt(row.createdAt)
-      .withUpdatedAt(row.updatedAt)
-      .build();
+      .withUpdatedAt(row.updatedAt);
+
+    if (statusEntity) {
+      builder.withStatus(statusEntity);
+    }
+
+    return builder.build();
   }
 }

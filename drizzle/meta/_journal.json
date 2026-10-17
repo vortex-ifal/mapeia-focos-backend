@@ -57,6 +57,13 @@
       "when": 1792114402988,
       "tag": "20261016013322_create_roles_table_and_update_users_role",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792201129308,
+      "tag": "20261017013849_create_occurrence_statuses_table",
+      "breakpoints": true
     }
   ]
 }

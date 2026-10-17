@@ -1,5 +1,6 @@
+import { OccurrenceStatusEntity } from '../occurrence-status';
 import { OccurrenceEntity } from './occurrence.entity';
-import { OccurrenceProps, OccurrenceStatus } from './occurrence.props';
+import { OccurrenceProps } from './occurrence.props';
 
 export class OccurrenceBuilder {
   private props: OccurrenceProps;
@@ -10,7 +11,6 @@ export class OccurrenceBuilder {
       description: '',
       latitude: null,
       longitude: null,
-      status: 'pending',
       isAnonymous: true,
     };
   }
@@ -46,7 +46,7 @@ export class OccurrenceBuilder {
     return this;
   }
 
-  withStatus(status: OccurrenceStatus): this {
+  withStatus(status: OccurrenceStatusEntity): this {
     this.props.status = status;
     return this;
   }

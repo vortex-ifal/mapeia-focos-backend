@@ -1,12 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { OccurrenceEntity } from '../entities';
-import { OccurrencesRepository } from '../repositories';
+import {
+  OccurrencesRepository,
+  OccurrenceStatusesRepository,
+} from '../repositories';
 
 @Injectable()
 export class OccurrenceService {
-  constructor(private readonly occurrencesRepository: OccurrencesRepository) {}
+  constructor(
+    private readonly occurrencesRepository: OccurrencesRepository,
+    private readonly occurrenceStatusesRepository: OccurrenceStatusesRepository,
+  ) {}
 
   async create(entity: OccurrenceEntity): Promise<OccurrenceEntity> {
+    if (!entity.status) {
+      const defaultStatus =
+        await this.occurrenceStatusesRepository.findByKey('registered');
+      if (!defaultStatus) {
+        throw new InternalServerErrorException(
+          'Status padrão "registered" não encontrado no sistema',
+        );
+      }
+      entity.status = defaultStatus;
+    }
+
     return this.occurrencesRepository.create(entity);
   }
 

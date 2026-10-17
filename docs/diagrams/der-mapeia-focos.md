@@ -12,6 +12,12 @@ erDiagram
         string name UK
     }
 
+    OCCURRENCE_STATUS["OCCURRENCE_STATUS (Status de Ocorrência)"] {
+        uuid id PK
+        string name
+        string key UK
+    }
+
     USER["USER (Usuário)"] {
         uuid id PK
         string name
@@ -27,7 +33,7 @@ erDiagram
     OCCURRENCE["OCCURRENCE (Ocorrência)"] {
         uuid id PK
         string description
-        enum status "pending | validated | discarded | assigned | inspected | resolved"
+        uuid status_id FK
         boolean is_anonymous
         boolean is_active
         uuid reported_by_user_id FK
@@ -126,6 +132,7 @@ erDiagram
 
     %% ── Relacionamentos ──────────────────────────────────────
     ROLE ||--o{ USER                : "defines permissions for"
+    OCCURRENCE_STATUS ||--o{ OCCURRENCE : "classifies"
 
     USER ||--o{ OCCURRENCE          : "reports (citizen)"
     LOCATION ||--|| OCCURRENCE      : "locates"
@@ -153,6 +160,7 @@ erDiagram
 | Decisão | Escolha |
 |---|---|
 | Perfis de usuário | Tabela `ROLE` relacional com `name` único (`citizen`, `agent`, `manager`), vinculada à tabela `USER` via `role_id` |
+| Status de ocorrência | Tabela `OCCURRENCE_STATUS` relacional com `key` única em inglês (`registered`, `under_review`, `rejected`, `accepted`, `forwarded_for_inspection`, `resolved`) e `name` descritivo |
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade `STATUS_HISTORY` para auditoria completa de mudanças |
@@ -170,6 +178,7 @@ erDiagram
 | Entidade | RF cobertos | Ator principal |
 |---|---|---|
 | `ROLE` | RF01, RN11 | Sistema |
+| `OCCURRENCE_STATUS` | RF02, RF08 | Sistema |
 | `USER` | RF01, RN11 | Todos |
 | `OCCURRENCE` | RF02, RF05, RF06, RF08, RF16 | Cidadão |
 | `LOCATION` | RF05, RF06, RF14 | Cidadão |
