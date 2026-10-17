@@ -10,7 +10,7 @@ export class OccurrenceEntity {
   private readonly _longitude: number | null;
   private _status?: OccurrenceStatusEntity;
   private readonly _isAnonymous: boolean;
-  private readonly _reportedByUserId?: string | null;
+  private _userId: string;
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
 
@@ -23,7 +23,7 @@ export class OccurrenceEntity {
     this._longitude = props.longitude ?? null;
     this._status = props.status;
     this._isAnonymous = props.isAnonymous ?? true;
-    this._reportedByUserId = props.reportedByUserId ?? null;
+    this._userId = props.userId;
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
   }
@@ -64,8 +64,12 @@ export class OccurrenceEntity {
     return this._isAnonymous;
   }
 
-  get reportedByUserId(): string | null | undefined {
-    return this._reportedByUserId;
+  get userId(): string {
+    return this._userId;
+  }
+
+  set userId(userId: string) {
+    this._userId = userId;
   }
 
   get createdAt(): Date | undefined {

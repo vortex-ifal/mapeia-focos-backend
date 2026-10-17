@@ -28,12 +28,11 @@ export const occurrencesTable = pgTable(
       .notNull(),
     isAnonymous: boolean('is_anonymous').default(true).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
-    reportedByUserId: uuid('reported_by_user_id').references(
-      () => usersTable.id,
-      {
-        onDelete: 'set null',
-      },
-    ),
+    userId: uuid('user_id')
+      .references(() => usersTable.id, {
+        onDelete: 'restrict',
+      })
+      .notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

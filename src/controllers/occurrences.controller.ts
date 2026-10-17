@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { DEV_USERS } from '../constants';
 import { CreatedResponseDto, CreateOccurrenceDto } from '../dtos';
 import { OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
@@ -29,7 +30,10 @@ export class OccurrencesController {
     description: 'Dados da requisição inválidos (ex.: validações de campos ou coordenadas).',
   })
   async create(@Body() dto: CreateOccurrenceDto): Promise<CreatedResponseDto> {
-    const domainEntity = this.occurrenceMapper.toDomainFromDto(dto);
+    const domainEntity = this.occurrenceMapper.toDomainFromDto(
+      dto,
+      DEV_USERS.CITIZEN_ID,
+    );
     const id = await this.occurrenceService.create(domainEntity);
     return this.occurrenceMapper.toCreatedDto(id);
   }

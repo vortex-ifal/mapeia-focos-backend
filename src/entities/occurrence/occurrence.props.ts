@@ -9,7 +9,7 @@ export interface OccurrenceProps {
   longitude?: number | null;
   status?: OccurrenceStatusEntity;
   isAnonymous?: boolean;
-  reportedByUserId?: string | null;
+  userId: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -64,6 +64,13 @@
       "when": 1792201129308,
       "tag": "20261017013849_create_occurrence_statuses_table",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792205674518,
+      "tag": "20261017025434_rename_reported_by_to_user_id_and_set_not_null",
+      "breakpoints": true
     }
   ]
 }

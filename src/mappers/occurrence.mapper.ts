@@ -22,13 +22,14 @@ export class OccurrenceMapper {
     private readonly occurrenceStatusMapper: OccurrenceStatusMapper,
   ) {}
 
-  toDomainFromDto(dto: CreateOccurrenceDto): OccurrenceEntity {
+  toDomainFromDto(dto: CreateOccurrenceDto, userId: string): OccurrenceEntity {
     return OccurrenceBuilder.create()
       .withAddress(dto.address)
       .withDescription(dto.description)
       .withSituationType(dto.situation_type)
       .withCoordinates(dto.latitude, dto.longitude)
       .withIsAnonymous(true)
+      .withUserId(userId)
       .build();
   }
 
@@ -55,7 +56,7 @@ export class OccurrenceMapper {
       longitude: entity.longitude,
       statusId,
       isAnonymous: entity.isAnonymous,
-      reportedByUserId: entity.reportedByUserId ?? null,
+      userId: entity.userId,
     };
   }
 
@@ -76,7 +77,7 @@ export class OccurrenceMapper {
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
       .withIsAnonymous(row.isAnonymous)
-      .withReportedByUserId(row.reportedByUserId)
+      .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
 
