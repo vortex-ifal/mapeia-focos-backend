@@ -30,8 +30,7 @@ export class OccurrencesController {
   })
   async create(@Body() dto: CreateOccurrenceDto): Promise<CreatedResponseDto> {
     const domainEntity = this.occurrenceMapper.toDomainFromDto(dto);
-    const createdEntity = await this.occurrenceService.create(domainEntity);
-    return this.occurrenceMapper.toCreatedDto(createdEntity);
+    const id = await this.occurrenceService.create(domainEntity);
+    return this.occurrenceMapper.toCreatedDto(id);
   }
 }
-

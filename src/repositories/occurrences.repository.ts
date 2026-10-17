@@ -17,19 +17,15 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<OccurrenceEntity> {
+  async create(entity: OccurrenceEntity): Promise<string> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
       .insert(occurrencesTable)
       .values(data)
-      .returning();
+      .returning({ id: occurrencesTable.id });
 
-    const created = await this.findById(inserted.id);
-    if (!created) {
-      return this.mapper.toDomainFromPersistence(inserted);
-    }
-    return created;
+    return inserted.id;
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {

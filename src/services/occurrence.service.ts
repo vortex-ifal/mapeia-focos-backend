@@ -12,7 +12,7 @@ export class OccurrenceService {
     private readonly occurrenceStatusesRepository: OccurrenceStatusesRepository,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<OccurrenceEntity> {
+  async create(entity: OccurrenceEntity): Promise<string> {
     if (!entity.status) {
       const defaultStatus =
         await this.occurrenceStatusesRepository.findByKey('registered');

@@ -32,9 +32,9 @@ export class OccurrenceMapper {
       .build();
   }
 
-  toCreatedDto(entity: OccurrenceEntity): CreatedResponseDto {
+  toCreatedDto(id: string): CreatedResponseDto {
     return {
-      id: entity.id ?? '',
+      id,
     };
   }
 
