@@ -1,22 +1,16 @@
-export type OccurrenceStatus =
-  | 'pending'
-  | 'validated'
-  | 'discarded'
-  | 'assigned'
-  | 'inspected'
-  | 'resolved';
+import { OccurrenceStatusEntity } from '../occurrence-status';
 
 export interface OccurrenceProps {
   id?: string;
   address: string;
   description: string;
   situationType?: string | null;
-
   latitude?: number | null;
   longitude?: number | null;
-  status?: OccurrenceStatus;
+  status?: OccurrenceStatusEntity;
   isAnonymous?: boolean;
-  reportedByUserId?: string | null;
+  userId: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
+

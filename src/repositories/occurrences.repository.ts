@@ -1,7 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { OccurrenceEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, occurrencesTable } from '../infra';
+import {
+  DRIZZLE_PROVIDER,
+  type DrizzleDB,
+  occurrencesTable,
+  occurrenceStatusesTable,
+} from '../infra';
 import { OccurrenceMapper } from '../mappers';
 
 @Injectable()
@@ -12,21 +17,28 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<OccurrenceEntity> {
+  async create(entity: OccurrenceEntity): Promise<string> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
       .insert(occurrencesTable)
       .values(data)
-      .returning();
+      .returning({ id: occurrencesTable.id });
 
-    return this.mapper.toDomainFromPersistence(inserted);
+    return inserted.id;
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {
     const [row] = await this.db
-      .select()
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
       .from(occurrencesTable)
+      .leftJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
       .where(
         and(
           eq(occurrencesTable.id, id),
@@ -39,7 +51,10 @@ export class OccurrencesRepository {
       return null;
     }
 
-    return this.mapper.toDomainFromPersistence(row);
+    return this.mapper.toDomainFromPersistence({
+      ...row.occurrence,
+      status: row.status,
+    });
   }
 
   async softDelete(id: string): Promise<boolean> {

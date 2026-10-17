@@ -20,6 +20,7 @@
     "prod": "node dist/main",
     "lint": "oxlint --type-aware src/",
     "db:up": "docker compose up -d database",
+    "db:down": "docker compose down -v",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

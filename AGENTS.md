@@ -12,8 +12,18 @@ Você está trabalhando no backend do sistema **Mapeia Focos**. Siga rigorosamen
 ## 2. Padrão Arquitetural (Clean Architecture + MVC)
 A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigorosa. Cada camada tem uma responsabilidade estrita:
 
-1. **`controllers/`**: Rotas HTTP, Guards (`@Roles`, `@CurrentUser`), recepção de DTOs e conversão via Mappers. **Nunca inclua regras de negócio ou chamadas ao banco aqui.**
-2. **`services/`**: Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`). **Regra estrita de tipagem e limites:** os services **só podem receber e retornar Entidades** (nunca recebem nem retornam DTOs ou schemas de persistência diretamente). Aplicam regras de negócio e delegam a repositórios.
+1. **`controllers/`**:
+   - Rotas HTTP, Guards (`@Roles`, `@CurrentUser`), recepção de DTOs e conversão via Mappers.
+   - **Tratamento de Bad Request:** `BadRequestException` pertence exclusivamente a esta camada (ou validações via Pipes). Se uma requisição possui dados malformados ou inválidos de entrada, o erro deve ser disparado aqui.
+   - **Regra:** Nunca inclua regras de negócio ou chamadas ao banco nesta camada.
+
+2. **`services/`**:
+   - Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`).
+   - **Tipagem estrita:** Services **só podem receber e retornar Entidades** (nunca recebem nem retornam DTOs ou schemas de persistência diretamente).
+   - **Tratamento de Exceções:** Services **NUNCA** devem lançar `BadRequestException` (conceito de transporte/entrada HTTP). Services lançam:
+     - Exceções de negócio/domínio: `ConflictException`, `NotFoundException`, `ForbiddenException`, `UnprocessableEntityException`.
+     - Exceções de infraestrutura/sistema: `InternalServerErrorException` (para falhas internas ou inconsistência de dados mestres).
+
 3. **`entities/`**: O coração do domínio. Classes TypeScript puras, organizadas em subpastas por entidade (ex: `user/`). Cada entidade possui:
    - `*.entity.ts`: A classe de domínio sem decorators de infra.
    - `*.props.ts`: As interfaces/tipos da entidade.

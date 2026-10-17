@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common';
 import { UserEntity } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
@@ -24,20 +28,18 @@ export class UserService {
       throw new ConflictException('CPF já cadastrado no sistema');
     }
 
-    const rawPassword = entity.password;
-    if (!rawPassword) {
-      throw new BadRequestException('A senha é obrigatória');
-    }
-
     let role = entity.role;
     if (!role) {
       const defaultRole = await this.rolesRepository.findByName('citizen');
       if (!defaultRole) {
-        throw new BadRequestException('Role padrão "citizen" não encontrada no sistema');
+        throw new InternalServerErrorException(
+          'Role padrão "citizen" não encontrada no sistema',
+        );
       }
       role = defaultRole;
     }
-
+    
+    const rawPassword = entity.password;
     const passwordHash = await this.cryptoService.hash(rawPassword);
 
     entity.role = role;

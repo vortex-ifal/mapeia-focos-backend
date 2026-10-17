@@ -1,5 +1,6 @@
+import { OccurrenceStatusEntity } from '../occurrence-status';
 import { OccurrenceEntity } from './occurrence.entity';
-import { OccurrenceProps, OccurrenceStatus } from './occurrence.props';
+import { OccurrenceProps } from './occurrence.props';
 
 export class OccurrenceBuilder {
   private props: OccurrenceProps;
@@ -10,8 +11,8 @@ export class OccurrenceBuilder {
       description: '',
       latitude: null,
       longitude: null,
-      status: 'pending',
       isAnonymous: true,
+      userId: '',
     };
   }
 
@@ -39,14 +40,13 @@ export class OccurrenceBuilder {
     return this;
   }
 
-
   withCoordinates(latitude?: number | null, longitude?: number | null): this {
     this.props.latitude = latitude;
     this.props.longitude = longitude;
     return this;
   }
 
-  withStatus(status: OccurrenceStatus): this {
+  withStatus(status: OccurrenceStatusEntity): this {
     this.props.status = status;
     return this;
   }
@@ -56,8 +56,8 @@ export class OccurrenceBuilder {
     return this;
   }
 
-  withReportedByUserId(reportedByUserId?: string | null): this {
-    this.props.reportedByUserId = reportedByUserId;
+  withUserId(userId: string): this {
+    this.props.userId = userId;
     return this;
   }
 
@@ -78,6 +78,9 @@ export class OccurrenceBuilder {
     if (!this.props.description || this.props.description.trim().length === 0) {
       throw new Error('Description is required to build an OccurrenceEntity');
     }
+    if (!this.props.userId || this.props.userId.trim().length === 0) {
+      throw new Error('UserId is required to build an OccurrenceEntity');
+    }
 
     const { latitude, longitude } = this.props;
 
@@ -92,11 +95,6 @@ export class OccurrenceBuilder {
     }
     if (longitude != null && (longitude < -180 || longitude > 180)) {
       throw new Error('Longitude must be between -180 and 180');
-    }
-
-    // Invariante de negócio: se for anônimo, não deve ter reportedByUserId
-    if (this.props.isAnonymous) {
-      this.props.reportedByUserId = null;
     }
 
     return new OccurrenceEntity(this.props);

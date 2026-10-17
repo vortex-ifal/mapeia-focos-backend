@@ -6,20 +6,11 @@ import {
   text,
   boolean,
   timestamp,
-  pgEnum,
   numeric,
   check,
 } from 'drizzle-orm/pg-core';
+import { occurrenceStatusesTable } from './occurrence-status.schema';
 import { usersTable } from './user.schema';
-
-export const occurrenceStatusEnum = pgEnum('occurrence_status', [
-  'pending',
-  'validated',
-  'discarded',
-  'assigned',
-  'inspected',
-  'resolved',
-]);
 
 export const occurrencesTable = pgTable(
   'occurrences',
@@ -32,15 +23,16 @@ export const occurrencesTable = pgTable(
     situationType: varchar('situation_type', { length: 100 }),
     latitude: numeric('latitude', { precision: 9, scale: 6, mode: 'number' }),
     longitude: numeric('longitude', { precision: 9, scale: 6, mode: 'number' }),
-    status: occurrenceStatusEnum('status').default('pending').notNull(),
+    statusId: uuid('status_id')
+      .references(() => occurrenceStatusesTable.id)
+      .notNull(),
     isAnonymous: boolean('is_anonymous').default(true).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
-    reportedByUserId: uuid('reported_by_user_id').references(
-      () => usersTable.id,
-      {
-        onDelete: 'set null',
-      },
-    ),
+    userId: uuid('user_id')
+      .references(() => usersTable.id, {
+        onDelete: 'restrict',
+      })
+      .notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
