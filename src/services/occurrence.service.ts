@@ -2,13 +2,15 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
-import { OccurrenceEntity } from '../entities';
+import { NearbyOccurrenceEntity, OccurrenceEntity } from '../entities';
 import {
   OccurrencesRepository,
   OccurrenceStatusesRepository,
   UsersRepository,
 } from '../repositories';
+import { TERRITORIAL_MAX_RESULTS } from '../constants';
 
 @Injectable()
 export class OccurrenceService {
@@ -44,5 +46,40 @@ export class OccurrenceService {
 
   async softDelete(id: string): Promise<boolean> {
     return this.occurrencesRepository.softDelete(id);
+  }
+
+  // --- NOVOS MÉTODOS PARA TRIAGEM E CONTEXTO TERRITORIAL ---
+
+  async findAwaitingTriage(
+    limit: number,
+    offset: number,
+  ): Promise<OccurrenceEntity[]> {
+    return this.occurrencesRepository.findAwaitingTriage(limit, offset);
+  }
+
+  async countAwaitingTriage(): Promise<number> {
+    return this.occurrencesRepository.countAwaitingTriage();
+  }
+
+  async findTerritorialContext(
+    id: string,
+    radiusMeters: number,
+  ): Promise<NearbyOccurrenceEntity[]> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada');
+    }
+
+    if (occurrence.latitude === null || occurrence.longitude === null) {
+      throw new UnprocessableEntityException(
+        'A ocorrência não possui coordenadas para calcular o contexto territorial',
+      );
+    }
+
+    return this.occurrencesRepository.findNearby(
+      { id, latitude: occurrence.latitude, longitude: occurrence.longitude },
+      radiusMeters,
+      TERRITORIAL_MAX_RESULTS,
+    );
   }
 }

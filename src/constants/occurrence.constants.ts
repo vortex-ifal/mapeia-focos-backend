@@ -1,0 +1,10 @@
+export const TRIAGE_PENDING_STATUS_KEY = 'registered';
+export const REJECTED_STATUS_KEY = 'rejected';
+
+export const TRIAGE_QUEUE_DEFAULT_LIMIT = 50;
+export const TRIAGE_QUEUE_MAX_LIMIT = 100;
+
+export const TERRITORIAL_DEFAULT_RADIUS_METERS = 500;
+export const TERRITORIAL_MIN_RADIUS_METERS = 50;
+export const TERRITORIAL_MAX_RADIUS_METERS = 2000;
+export const TERRITORIAL_MAX_RESULTS = 100;

@@ -71,6 +71,13 @@
       "when": 1792205674518,
       "tag": "20261017025434_rename_reported_by_to_user_id_and_set_not_null",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792587400019,
+      "tag": "20261021125640_add_triage_indexes_to_occurrences",
+      "breakpoints": true
     }
   ]
 }
