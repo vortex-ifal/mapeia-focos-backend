@@ -31,7 +31,7 @@ export class OccurrenceMapper {
     return OccurrenceBuilder.create()
       .withAddress(dto.address)
       .withDescription(dto.description)
-      .withSituationType(dto.situation_type)
+      .withSituationType(dto.situationType)
       .withCoordinates(dto.latitude, dto.longitude)
       .withUserId(userId)
       .build();

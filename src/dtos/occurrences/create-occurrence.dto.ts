@@ -37,7 +37,7 @@ export class CreateOccurrenceDto {
   })
   @IsString({ message: 'O tipo da situação deve ser uma string' })
   @IsOptional()
-  situation_type?: string;
+  situationType?: string;
 
 
   // Se um dos dois for enviado, os dois passam a ser obrigatórios
