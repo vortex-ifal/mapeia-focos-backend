@@ -18,6 +18,7 @@ export const occurrencesTable = pgTable(
     id: uuid('id')
       .default(sql`uuidv7()`)
       .primaryKey(),
+    protocol: varchar('protocol', { length: 5 }).unique().notNull(),
     address: varchar('address', { length: 255 }).notNull(),
     description: text('description').notNull(),
     situationType: varchar('situation_type', { length: 100 }),

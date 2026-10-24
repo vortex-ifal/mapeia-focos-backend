@@ -3,8 +3,13 @@ import {
   OccurrenceBuilder,
   OccurrenceEntity,
   OccurrenceStatusEntity,
+  type OccurrenceStatusReadModel,
 } from '../entities';
-import { CreatedResponseDto, CreateOccurrenceDto } from '../dtos';
+import {
+  CreatedResponseDto,
+  CreateOccurrenceDto,
+  OccurrenceStatusResponseDto,
+} from '../dtos';
 import {
   OccurrenceInsert,
   OccurrenceSelect,
@@ -38,6 +43,16 @@ export class OccurrenceMapper {
     };
   }
 
+  toStatusDto(
+    readModel: OccurrenceStatusReadModel,
+  ): OccurrenceStatusResponseDto {
+    return {
+      protocol: readModel.protocol,
+      statusKey: readModel.statusKey,
+      statusName: readModel.statusName,
+    };
+  }
+
   toPersistence(entity: OccurrenceEntity): OccurrenceInsert {
     const statusId = entity.status?.id;
     if (!statusId) {
@@ -45,9 +60,15 @@ export class OccurrenceMapper {
         'A valid status with ID is required to persist an OccurrenceEntity',
       );
     }
+    if (!entity.protocol) {
+      throw new Error(
+        'A valid protocol is required to persist an OccurrenceEntity',
+      );
+    }
 
     return {
       ...(entity.id ? { id: entity.id } : {}),
+      protocol: entity.protocol,
       address: entity.address,
       description: entity.description,
       situationType: entity.situationType ?? null,
@@ -70,6 +91,7 @@ export class OccurrenceMapper {
 
     const builder = OccurrenceBuilder.create()
       .withId(row.id)
+      .withProtocol(row.protocol)
       .withAddress(row.address)
       .withDescription(row.description)
       .withSituationType(row.situationType)

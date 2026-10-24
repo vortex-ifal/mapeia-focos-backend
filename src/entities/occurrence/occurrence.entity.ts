@@ -3,6 +3,7 @@ import { OccurrenceProps } from './occurrence.props';
 
 export class OccurrenceEntity {
   private readonly _id?: string;
+  private _protocol?: string;
   private readonly _address: string;
   private readonly _description: string;
   private readonly _situationType?: string | null;
@@ -15,6 +16,7 @@ export class OccurrenceEntity {
 
   constructor(props: OccurrenceProps) {
     this._id = props.id;
+    this._protocol = props.protocol;
     this._address = props.address;
     this._description = props.description;
     this._situationType = props.situationType ?? null;
@@ -28,6 +30,14 @@ export class OccurrenceEntity {
 
   get id(): string | undefined {
     return this._id;
+  }
+
+  get protocol(): string | undefined {
+    return this._protocol;
+  }
+
+  set protocol(protocol: string | undefined) {
+    this._protocol = protocol;
   }
 
   get address(): string {

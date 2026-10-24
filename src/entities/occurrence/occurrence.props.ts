@@ -2,6 +2,7 @@ import { OccurrenceStatusEntity } from '../occurrence-status';
 
 export interface OccurrenceProps {
   id?: string;
+  protocol?: string;
   address: string;
   description: string;
   situationType?: string | null;
@@ -12,4 +13,3 @@ export interface OccurrenceProps {
   createdAt?: Date;
   updatedAt?: Date;
 }
-

@@ -24,6 +24,11 @@ export class OccurrenceBuilder {
     return this;
   }
 
+  withProtocol(protocol?: string): this {
+    this.props.protocol = protocol;
+    return this;
+  }
+
   withAddress(address: string): this {
     this.props.address = address;
     return this;
