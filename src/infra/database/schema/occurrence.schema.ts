@@ -26,7 +26,6 @@ export const occurrencesTable = pgTable(
     statusId: uuid('status_id')
       .references(() => occurrenceStatusesTable.id)
       .notNull(),
-    isAnonymous: boolean('is_anonymous').default(true).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
     userId: uuid('user_id')
       .references(() => usersTable.id, {

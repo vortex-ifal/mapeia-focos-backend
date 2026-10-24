@@ -34,7 +34,6 @@ erDiagram
         uuid id PK
         string description
         uuid status_id FK
-        boolean is_anonymous
         boolean is_active
         uuid user_id FK
         uuid location_id FK

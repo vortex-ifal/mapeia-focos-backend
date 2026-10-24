@@ -28,7 +28,6 @@ export class OccurrenceMapper {
       .withDescription(dto.description)
       .withSituationType(dto.situation_type)
       .withCoordinates(dto.latitude, dto.longitude)
-      .withIsAnonymous(true)
       .withUserId(userId)
       .build();
   }
@@ -55,7 +54,6 @@ export class OccurrenceMapper {
       latitude: entity.latitude,
       longitude: entity.longitude,
       statusId,
-      isAnonymous: entity.isAnonymous,
       userId: entity.userId,
     };
   }
@@ -76,7 +74,6 @@ export class OccurrenceMapper {
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
-      .withIsAnonymous(row.isAnonymous)
       .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);

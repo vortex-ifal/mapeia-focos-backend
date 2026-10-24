@@ -11,7 +11,6 @@ export class OccurrenceBuilder {
       description: '',
       latitude: null,
       longitude: null,
-      isAnonymous: true,
       userId: '',
     };
   }
@@ -48,11 +47,6 @@ export class OccurrenceBuilder {
 
   withStatus(status: OccurrenceStatusEntity): this {
     this.props.status = status;
-    return this;
-  }
-
-  withIsAnonymous(isAnonymous: boolean): this {
-    this.props.isAnonymous = isAnonymous;
     return this;
   }
 
