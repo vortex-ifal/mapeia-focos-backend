@@ -19,18 +19,22 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 
 2. **`services/`**:
    - Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`).
-   - **Tipagem estrita:** Services **só podem receber e retornar Entidades** (nunca recebem nem retornam DTOs ou schemas de persistência diretamente).
+   - **Tipagem estrita:** Services **só podem receber e retornar Entidades ou Read Models** de domínio (nunca recebem nem retornam DTOs ou schemas de persistência diretamente).
    - **Tratamento de Exceções:** Services **NUNCA** devem lançar `BadRequestException` (conceito de transporte/entrada HTTP). Services lançam:
      - Exceções de negócio/domínio: `ConflictException`, `NotFoundException`, `ForbiddenException`, `UnprocessableEntityException`.
      - Exceções de infraestrutura/sistema: `InternalServerErrorException` (para falhas internas ou inconsistência de dados mestres).
 
-3. **`entities/`**: O coração do domínio. Classes TypeScript puras, organizadas em subpastas por entidade (ex: `user/`). Cada entidade possui:
-   - `*.entity.ts`: A classe de domínio sem decorators de infra.
+3. **`entities/`**: O coração do domínio. Classes TypeScript puras, organizadas em subpastas por entidade (ex: `user/`, `occurrence/`). Cada entidade possui:
+   - `*.entity.ts`: A classe de domínio (Write Model) sem decorators de infra.
    - `*.props.ts`: As interfaces/tipos da entidade.
    - `*.builder.ts`: Pattern Builder obrigatório para instanciar a entidade com validação.
+   - **`read-models/` (Modelos de Leitura - CQRS Pragmático):**
+     - Interfaces TypeScript puras para projeções exclusivas de consulta (ex.: `OccurrenceStatusReadModel`).
+     - **Finalidade:** Otimizar performance de queries de leitura (evitando hidratação pesada do agregado completo) e prevenir vazamento de dados sensíveis (*data leakage*).
+     - **Regra:** Devem ser exportadas via `index.ts` da subpasta `read-models/` e pelo barrel export da entidade.
 4. **`mappers/`**: Transformação bidirecional de dados. Toda conversão passa por eles:
    - `toDomainFromDto()`: DTO -> Entity
-   - `toDto()`: Entity -> DTO
+   - `toDto()`: Entity / Read Model -> DTO
    - `toPersistence()`: Entity -> Drizzle Schema Insert
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
 5. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
@@ -46,12 +50,17 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
   - ✅ Correto: `import { UserEntity } from '../entities'`
 
 ## 4. Regras de Negócio e Domínio (Invariantes)
-- **Ocorrências Anônimas:** O atributo de anonimato do cidadão é inegociável. Ao transitar DTOs para View, certifique-se de que o Mapper remova qualquer identificação se `isAnonymous` for true.
 - **Não implemente testes:** Testes não serão desenvolvidos nesta fase. Não gere ou modifique arquivos `.spec.ts` ou `.e2e-spec.ts`.
 
 ## 5. Convenções de Código
-- Utilize **Inglês** para nomes de variáveis, métodos, classes e entidades (ex: `OccurrenceEntity`, `UserRepository`).
+- Utilize **Inglês** para nomes de variáveis, métodos, classes, entidades e rotas da API (ex: `OccurrenceEntity`, `UserRepository`, `GET /api/occurrences/protocol/:protocol`).
 - Utilize **`kebab-case`** para os arquivos TypeScript (ex: `occurrence.entity.ts`, `create-occurrence.dto.ts`).
+- **Padrão de Casing (JSON vs. Banco de Dados):**
+  - **Payloads JSON (DTOs / Read Models):** Utilize estritamente **`camelCase`** para todas as propriedades expostas em requests e responses da API (ex: `statusKey`, `statusName`, `createdAt`, `userId`).
+  - **Banco de Dados (PostgreSQL / Drizzle Schema):** Utilize estritamente **`snake_case`** para nomes de tabelas, colunas e enums SQL (ex: `created_at`, `status_id`, `situation_type`).
+- **Idioma das Mensagens e Documentação (PT-BR):**
+  - **Documentação Swagger / OpenAPI:** Toda a documentação dos endpoints, sumários (`summary`), descrições (`description`) e exemplos (`example`) nos decorators (`@ApiOperation`, `@ApiResponse`, `@ApiProperty`, etc.) **DEVE ser estritamente em Português (PT-BR)**.
+  - **Mensagens de Validação e Erros de Bad Request:** Todas as mensagens de erro disparadas por DTOs (`class-validator`), Pipes e `BadRequestException` **DEVEM ser estritamente em Português (PT-BR)** (ex.: `'O protocolo deve conter exatamente 5 caracteres alfanuméricos'`).
 - Priorize a tipagem explícita nos retornos de funções.
 
 ## 6. Documentação e Referências

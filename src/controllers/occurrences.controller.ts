@@ -1,7 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
-import { CreatedResponseDto, CreateOccurrenceDto } from '../dtos';
+import {
+  CreatedResponseDto,
+  CreateOccurrenceDto,
+  OccurrenceStatusResponseDto,
+  ProtocolParamDto,
+} from '../dtos';
 import { OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
 
@@ -36,5 +49,34 @@ export class OccurrencesController {
     );
     const id = await this.occurrenceService.create(domainEntity);
     return this.occurrenceMapper.toCreatedDto(id);
+  }
+
+  @Get('protocol/:protocol')
+  @ApiOperation({
+    summary: 'Consultar status de ocorrência por protocolo',
+    description:
+      'Retorna o status atual de uma ocorrência através de seu código de protocolo alfanumérico de 5 caracteres.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Status da ocorrência recuperado com sucesso.',
+    type: OccurrenceStatusResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetro de protocolo inválido (deve conter exatamente 5 caracteres alfanuméricos).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada para o protocolo informado.',
+  })
+  async getStatusByProtocol(
+    @Param() params: ProtocolParamDto,
+  ): Promise<OccurrenceStatusResponseDto> {
+    const readModel = await this.occurrenceService.findStatusByProtocol(
+      params.protocol,
+    );
+    return this.occurrenceMapper.toStatusDto(readModel);
   }
 }

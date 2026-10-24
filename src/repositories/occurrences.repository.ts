@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { OccurrenceEntity } from '../entities';
+import { OccurrenceEntity, type OccurrenceStatusReadModel } from '../entities';
 import {
   DRIZZLE_PROVIDER,
   type DrizzleDB,
@@ -57,6 +57,39 @@ export class OccurrencesRepository {
     });
   }
 
+  async findStatusByProtocol(
+    protocol: string,
+  ): Promise<OccurrenceStatusReadModel | null> {
+    const [row] = await this.db
+      .select({
+        protocol: occurrencesTable.protocol,
+        statusKey: occurrenceStatusesTable.key,
+        statusName: occurrenceStatusesTable.name,
+      })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(occurrencesTable.protocol, protocol),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      protocol: row.protocol,
+      statusKey: row.statusKey,
+      statusName: row.statusName,
+    };
+  }
+
   async softDelete(id: string): Promise<boolean> {
     const [updated] = await this.db
       .update(occurrencesTable)
@@ -75,4 +108,3 @@ export class OccurrencesRepository {
     return !!updated;
   }
 }
-

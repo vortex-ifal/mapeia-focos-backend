@@ -1,9 +1,10 @@
+import { randomBytes } from 'node:crypto';
 import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { OccurrenceEntity } from '../entities';
+import { OccurrenceEntity, type OccurrenceStatusReadModel } from '../entities';
 import {
   OccurrencesRepository,
   OccurrenceStatusesRepository,
@@ -35,14 +36,59 @@ export class OccurrenceService {
       entity.status = defaultStatus;
     }
 
+    entity.protocol = await this.generateUniqueProtocol();
+
     return this.occurrencesRepository.create(entity);
   }
 
+  async findStatusByProtocol(
+    protocol: string,
+  ): Promise<OccurrenceStatusReadModel> {
+    const normalizedProtocol = protocol.trim().toLowerCase();
+    const readModel =
+      await this.occurrencesRepository.findStatusByProtocol(normalizedProtocol);
+
+    if (!readModel) {
+      throw new NotFoundException(
+        'Ocorrência não encontrada para o protocolo informado',
+      );
+    }
+
+    return readModel;
+  }
+
+  
   async findById(id: string): Promise<OccurrenceEntity | null> {
     return this.occurrencesRepository.findById(id);
   }
-
+  
   async softDelete(id: string): Promise<boolean> {
     return this.occurrencesRepository.softDelete(id);
+  }
+
+  private async generateUniqueProtocol(): Promise<string> {
+    const maxAttempts = 10;
+    for (let attempts = 0; attempts < maxAttempts; attempts++) {
+      const candidate = this.generateRandomProtocol();
+      const existing =
+        await this.occurrencesRepository.findStatusByProtocol(candidate);
+      if (!existing) {
+        return candidate;
+      }
+    }
+
+    throw new InternalServerErrorException(
+      'Falha ao gerar protocolo único para a ocorrência',
+    );
+  }
+
+  private generateRandomProtocol(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const bytes = randomBytes(5);
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+      result += chars[bytes[i] % chars.length];
+    }
+    return result;
   }
 }

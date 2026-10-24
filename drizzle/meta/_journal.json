@@ -71,6 +71,20 @@
       "when": 1792205674518,
       "tag": "20261017025434_rename_reported_by_to_user_id_and_set_not_null",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792802822508,
+      "tag": "20261024004702_remove_is_anonymous_from_occurrences",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792805394953,
+      "tag": "20261024012954_add_protocol_to_occurrences",
+      "breakpoints": true
     }
   ]
 }
