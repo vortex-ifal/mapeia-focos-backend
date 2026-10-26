@@ -32,16 +32,22 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
      - Interfaces TypeScript puras para projeções exclusivas de consulta (ex.: `OccurrenceStatusReadModel`).
      - **Finalidade:** Otimizar performance de queries de leitura (evitando hidratação pesada do agregado completo) e prevenir vazamento de dados sensíveis (*data leakage*).
      - **Regra:** Devem ser exportadas via `index.ts` da subpasta `read-models/` e pelo barrel export da entidade.
-4. **`mappers/`**: Transformação bidirecional de dados. Toda conversão passa por eles:
+5. **`dtos/`**: Objetos de transferência de dados com validação (`class-validator`) e documentação Swagger (`@ApiProperty`).
+   - **Estruturação Obrigatória (`request/` e `response/`):** Em cada módulo ou subpasta de entidade (ex.: `dtos/occurrences/`, `dtos/common/`), os DTOs **DEVEM ser estritamente separados** em duas subpastas:
+     - `request/`: Contém DTOs de entrada enviados pelo cliente HTTP (payloads de `@Body()`, `@Query()` e `@Param()`, como parâmetros de rota, filtros e comandos de criação/atualização).
+     - `response/`: Contém DTOs de saída retornados pela API (payloads serializados das respostas HTTP).
+   - **DTOs Genéricos / Compartilhados:** Parâmetros ou respostas comuns a várias entidades (ex.: `uuid-param.dto.ts`, `created-response.dto.ts`) devem residir em `dtos/common/request/` e `dtos/common/response/`.
+   - **Regra de Barrels:** Tanto `request/` quanto `response/` devem conter seus próprios arquivos `index.ts`, e a raiz da subpasta da entidade deve re-exportá-los através do seu `index.ts`.
+6. **`mappers/`**: Transformação bidirecional de dados. Toda conversão passa por eles:
    - `toDomainFromDto()`: DTO -> Entity
    - `toDto()`: Entity / Read Model -> DTO
    - `toPersistence()`: Entity -> Drizzle Schema Insert
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
-5. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
-6. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
+7. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
+8. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
    - **Boas Práticas de Migrations:** Ao gerar novas migrações, **sempre utilize a flag `--name`** com um nome descritivo em `snake_case` (ex: `pnpm db:generate --name create_occurrences_table` ou `pnpm db:generate --name add_status_to_occurrences`). Garanta migrações atômicas e revise os arquivos SQL em `drizzle/`.
    - **Idempotência de Seeds (Sem TRUNCATE):** A implementação de seeds **NUNCA deve utilizar `TRUNCATE`** ou apagar dados existentes das tabelas. Utilize sempre operações de Upsert idempotentes (`onConflictDoNothing` ou `onConflictDoUpdate`) para que possam ser executadas com segurança em deploys/pre-steps sem perda de dados de teste ou produção.
-7. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
+9. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
 
 ## 3. Regra Mandatória: Barrel Exports (`index.ts`)
 - **Toda pasta e subpasta do projeto DEVE ter um `index.ts`.**

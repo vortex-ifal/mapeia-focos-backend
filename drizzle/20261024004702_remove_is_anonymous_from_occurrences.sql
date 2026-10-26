@@ -1,1 +1,0 @@
-ALTER TABLE "occurrences" DROP COLUMN "is_anonymous";

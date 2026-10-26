@@ -1,6 +1,6 @@
 {
-  "id": "01c40b0b-5e97-45fd-b850-f5e2b948a09d",
-  "prevId": "2afb5078-0882-4f22-8d42-831f83226fab",
+  "id": "f6a1f623-3964-42d4-a698-43d14ae8aa35",
+  "prevId": "74bf555b-52fd-44ca-95f9-3e49b939b2ed",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -287,6 +287,111 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.status_histories": {
+      "name": "status_histories",
+      "schema": "",
+      "columns": {
+        "occurrence_id": {
+          "name": "occurrence_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "changed_by_user_id": {
+          "name": "changed_by_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "previous_status_id": {
+          "name": "previous_status_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "new_status_id": {
+          "name": "new_status_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "changed_at": {
+          "name": "changed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "status_histories_occurrence_id_occurrences_id_fk": {
+          "name": "status_histories_occurrence_id_occurrences_id_fk",
+          "tableFrom": "status_histories",
+          "tableTo": "occurrences",
+          "columnsFrom": [
+            "occurrence_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "status_histories_changed_by_user_id_users_id_fk": {
+          "name": "status_histories_changed_by_user_id_users_id_fk",
+          "tableFrom": "status_histories",
+          "tableTo": "users",
+          "columnsFrom": [
+            "changed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "status_histories_previous_status_id_occurrence_statuses_id_fk": {
+          "name": "status_histories_previous_status_id_occurrence_statuses_id_fk",
+          "tableFrom": "status_histories",
+          "tableTo": "occurrence_statuses",
+          "columnsFrom": [
+            "previous_status_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "status_histories_new_status_id_occurrence_statuses_id_fk": {
+          "name": "status_histories_new_status_id_occurrence_statuses_id_fk",
+          "tableFrom": "status_histories",
+          "tableTo": "occurrence_statuses",
+          "columnsFrom": [
+            "new_status_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "status_histories_occurrence_id_changed_at_pk": {
+          "name": "status_histories_occurrence_id_changed_at_pk",
+          "columns": [
+            "occurrence_id",
+            "changed_at"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

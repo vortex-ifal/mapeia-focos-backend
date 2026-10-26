@@ -1,6 +1,6 @@
 {
-  "id": "cd3de303-fc5c-42ff-bd6d-e4ec3e7470a9",
-  "prevId": "ceb68762-2e1f-4fa1-bb84-b96cc4a9c7de",
+  "id": "74bf555b-52fd-44ca-95f9-3e49b939b2ed",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -135,6 +135,12 @@
           "notNull": true,
           "default": "uuidv7()"
         },
+        "protocol": {
+          "name": "protocol",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "address": {
           "name": "address",
           "type": "varchar(255)",
@@ -170,13 +176,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
-        },
-        "is_anonymous": {
-          "name": "is_anonymous",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
         },
         "is_active": {
           "name": "is_active",
@@ -236,7 +235,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "occurrences_protocol_unique": {
+          "name": "occurrences_protocol_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "protocol"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "occurrences_latitude_range": {
