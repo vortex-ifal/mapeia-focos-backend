@@ -12,8 +12,8 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
 import {
-  CreatedResponseDto,
   CreateOccurrenceDto,
+  CreateOccurrenceResponseDto,
   OccurrenceStatusResponseDto,
   ProtocolParamDto,
   TerritorialContextQueryDto,
@@ -44,20 +44,22 @@ export class OccurrencesController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Ocorrência registrada com sucesso.',
-    type: CreatedResponseDto,
+    type: CreateOccurrenceResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description:
       'Dados da requisição inválidos (ex.: validações de campos ou coordenadas).',
   })
-  async create(@Body() dto: CreateOccurrenceDto): Promise<CreatedResponseDto> {
+  async create(
+    @Body() dto: CreateOccurrenceDto,
+  ): Promise<CreateOccurrenceResponseDto> {
     const domainEntity = this.occurrenceMapper.toDomainFromDto(
       dto,
       DEV_USERS.CITIZEN_ID,
     );
-    const id = await this.occurrenceService.create(domainEntity);
-    return this.occurrenceMapper.toCreatedDto(id);
+    const createdOccurrence = await this.occurrenceService.create(domainEntity);
+    return this.occurrenceMapper.toCreateResponseDto(createdOccurrence);
   }
 
   @Get('triage')

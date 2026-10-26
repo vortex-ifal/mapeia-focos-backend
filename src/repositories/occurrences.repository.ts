@@ -3,6 +3,8 @@ import { and, asc, between, count, eq, lte, ne, sql } from 'drizzle-orm';
 import {
   NearbyOccurrenceEntity,
   OccurrenceEntity,
+  OccurrenceStatusKey,
+  type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
 } from '../entities';
 import {
@@ -13,7 +15,6 @@ import {
   statusHistoriesTable,
 } from '../infra';
 import { OccurrenceMapper } from '../mappers';
-import { REJECTED_STATUS_KEY, TRIAGE_PENDING_STATUS_KEY } from '../constants';
 
 @Injectable()
 export class OccurrencesRepository {
@@ -23,15 +24,23 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<string> {
+  async create(
+    entity: OccurrenceEntity,
+  ): Promise<OccurrenceCreatedReadModel> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
       .insert(occurrencesTable)
       .values(data)
-      .returning({ id: occurrencesTable.id });
+      .returning({
+        id: occurrencesTable.id,
+        protocol: occurrencesTable.protocol,
+      });
 
-    return inserted.id;
+    return {
+      id: inserted.id,
+      protocol: inserted.protocol,
+    };
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {
@@ -167,7 +176,7 @@ export class OccurrencesRepository {
       )
       .where(
         and(
-          eq(occurrenceStatusesTable.key, TRIAGE_PENDING_STATUS_KEY),
+          eq(occurrenceStatusesTable.key, OccurrenceStatusKey.REGISTERED),
           eq(occurrencesTable.isActive, true),
         ),
       )
@@ -193,7 +202,7 @@ export class OccurrencesRepository {
       )
       .where(
         and(
-          eq(occurrenceStatusesTable.key, TRIAGE_PENDING_STATUS_KEY),
+          eq(occurrenceStatusesTable.key, OccurrenceStatusKey.REGISTERED),
           eq(occurrencesTable.isActive, true),
         ),
       );
@@ -247,7 +256,7 @@ export class OccurrencesRepository {
         and(
           eq(occurrencesTable.isActive, true),
           ne(occurrencesTable.id, origin.id),
-          ne(occurrenceStatusesTable.key, REJECTED_STATUS_KEY),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
           between(occurrencesTable.latitude, minLat, maxLat),
           between(occurrencesTable.longitude, minLng, maxLng),
           lte(distance, radiusMeters),
