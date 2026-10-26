@@ -47,8 +47,8 @@ export class OccurrencesController {
       dto,
       DEV_USERS.CITIZEN_ID,
     );
-    const id = await this.occurrenceService.create(domainEntity);
-    return this.occurrenceMapper.toCreatedDto(id);
+    const result = await this.occurrenceService.create(domainEntity);
+    return this.occurrenceMapper.toCreatedDto(result.id, result.protocol);
   }
 
   @Get('protocol/:protocol')

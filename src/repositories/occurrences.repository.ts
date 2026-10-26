@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { OccurrenceEntity, type OccurrenceStatusReadModel } from '../entities';
+import {
+  OccurrenceEntity,
+  type OccurrenceCreatedReadModel,
+  type OccurrenceStatusReadModel,
+} from '../entities';
 import {
   DRIZZLE_PROVIDER,
   type DrizzleDB,
@@ -17,15 +21,21 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<string> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
       .insert(occurrencesTable)
       .values(data)
-      .returning({ id: occurrencesTable.id });
+      .returning({
+        id: occurrencesTable.id,
+        protocol: occurrencesTable.protocol,
+      });
 
-    return inserted.id;
+    return {
+      id: inserted.id,
+      protocol: inserted.protocol,
+    };
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {

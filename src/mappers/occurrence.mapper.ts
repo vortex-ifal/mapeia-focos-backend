@@ -37,9 +37,10 @@ export class OccurrenceMapper {
       .build();
   }
 
-  toCreatedDto(id: string): CreatedResponseDto {
+  toCreatedDto(id: string, protocol?: string): CreatedResponseDto {
     return {
       id,
+      ...(protocol ? { protocol } : {}),
     };
   }
 

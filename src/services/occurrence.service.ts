@@ -4,7 +4,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { OccurrenceEntity, type OccurrenceStatusReadModel } from '../entities';
+import {
+  OccurrenceEntity,
+  type OccurrenceCreatedReadModel,
+  type OccurrenceStatusReadModel,
+} from '../entities';
 import {
   OccurrencesRepository,
   OccurrenceStatusesRepository,
@@ -19,7 +23,7 @@ export class OccurrenceService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<string> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const user = await this.usersRepository.findById(entity.userId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado no sistema');
