@@ -3,11 +3,13 @@ import {
   OccurrenceBuilder,
   OccurrenceEntity,
   OccurrenceStatusEntity,
+  type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
 } from '../entities';
 import {
   CreatedResponseDto,
   CreateOccurrenceDto,
+  CreateOccurrenceResponseDto,
   OccurrenceStatusResponseDto,
 } from '../dtos';
 import {
@@ -40,6 +42,15 @@ export class OccurrenceMapper {
   toCreatedDto(id: string): CreatedResponseDto {
     return {
       id,
+    };
+  }
+
+  toCreateResponseDto(
+    readModel: OccurrenceCreatedReadModel,
+  ): CreateOccurrenceResponseDto {
+    return {
+      id: readModel.id,
+      protocol: readModel.protocol,
     };
   }
 

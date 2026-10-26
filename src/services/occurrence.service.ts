@@ -8,6 +8,7 @@ import {
 import {
   OccurrenceEntity,
   OccurrenceStatusKey,
+  type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
 } from '../entities';
 import {
@@ -24,7 +25,9 @@ export class OccurrenceService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<string> {
+  async create(
+    entity: OccurrenceEntity,
+  ): Promise<OccurrenceCreatedReadModel> {
     const user = await this.usersRepository.findById(entity.userId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado no sistema');
