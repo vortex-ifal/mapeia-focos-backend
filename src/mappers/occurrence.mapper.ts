@@ -5,11 +5,13 @@ import {
   OccurrenceBuilder,
   OccurrenceEntity,
   OccurrenceStatusEntity,
+  type OccurrenceStatusReadModel,
 } from '../entities';
 import {
   CreatedResponseDto,
   CreateOccurrenceDto,
   NearbyOccurrenceDto,
+  OccurrenceStatusResponseDto,
   TerritorialContextResponseDto,
   TriageQueueItemDto,
   TriageQueueResponseDto,
@@ -45,9 +47,8 @@ export class OccurrenceMapper {
     return OccurrenceBuilder.create()
       .withAddress(dto.address)
       .withDescription(dto.description)
-      .withSituationType(dto.situation_type)
+      .withSituationType(dto.situationType)
       .withCoordinates(dto.latitude, dto.longitude)
-      .withIsAnonymous(true)
       .withUserId(userId)
       .build();
   }
@@ -58,6 +59,16 @@ export class OccurrenceMapper {
     };
   }
 
+  toStatusDto(
+    readModel: OccurrenceStatusReadModel,
+  ): OccurrenceStatusResponseDto {
+    return {
+      protocol: readModel.protocol,
+      statusKey: readModel.statusKey,
+      statusName: readModel.statusName,
+    };
+  }
+
   toPersistence(entity: OccurrenceEntity): OccurrenceInsert {
     const statusId = entity.status?.id;
     if (!statusId) {
@@ -65,16 +76,21 @@ export class OccurrenceMapper {
         'A valid status with ID is required to persist an OccurrenceEntity',
       );
     }
+    if (!entity.protocol) {
+      throw new Error(
+        'A valid protocol is required to persist an OccurrenceEntity',
+      );
+    }
 
     return {
       ...(entity.id ? { id: entity.id } : {}),
+      protocol: entity.protocol,
       address: entity.address,
       description: entity.description,
       situationType: entity.situationType ?? null,
       latitude: entity.latitude,
       longitude: entity.longitude,
       statusId,
-      isAnonymous: entity.isAnonymous,
       userId: entity.userId,
     };
   }
@@ -89,11 +105,11 @@ export class OccurrenceMapper {
 
     const builder = OccurrenceBuilder.create()
       .withId(row.id)
+      .withProtocol(row.protocol)
       .withAddress(row.address)
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
-      .withIsAnonymous(row.isAnonymous)
       .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
@@ -104,8 +120,6 @@ export class OccurrenceMapper {
 
     return builder.build();
   }
-
-  // --- NOVOS MÉTODOS PARA TRIAGEM E CONTEXTO TERRITORIAL ---
 
   toNearbyDomainFromPersistence(
     row: NearbyOccurrenceRow,

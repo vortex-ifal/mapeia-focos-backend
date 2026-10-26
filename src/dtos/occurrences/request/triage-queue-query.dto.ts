@@ -4,7 +4,7 @@ import { IsInt, IsOptional, Max, Min } from 'class-validator';
 import {
   TRIAGE_QUEUE_DEFAULT_LIMIT,
   TRIAGE_QUEUE_MAX_LIMIT,
-} from '../../constants';
+} from '../../../constants';
 
 export class TriageQueueQueryDto {
   @ApiPropertyOptional({

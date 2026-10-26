@@ -1,11 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, between, count, eq, lte, ne, sql } from 'drizzle-orm';
-import { NearbyOccurrenceEntity, OccurrenceEntity } from '../entities';
+import {
+  NearbyOccurrenceEntity,
+  OccurrenceEntity,
+  type OccurrenceStatusReadModel,
+} from '../entities';
 import {
   DRIZZLE_PROVIDER,
   type DrizzleDB,
   occurrencesTable,
   occurrenceStatusesTable,
+  statusHistoriesTable,
 } from '../infra';
 import { OccurrenceMapper } from '../mappers';
 import { REJECTED_STATUS_KEY, TRIAGE_PENDING_STATUS_KEY } from '../constants';
@@ -52,6 +57,85 @@ export class OccurrencesRepository {
     return this.mapper.toDomainFromPersistence({
       ...row.occurrence,
       status: row.status,
+    });
+  }
+
+  async findStatusByProtocol(
+    protocol: string,
+  ): Promise<OccurrenceStatusReadModel | null> {
+    const [row] = await this.db
+      .select({
+        protocol: occurrencesTable.protocol,
+        statusKey: occurrenceStatusesTable.key,
+        statusName: occurrenceStatusesTable.name,
+      })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(occurrencesTable.protocol, protocol),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      protocol: row.protocol,
+      statusKey: row.statusKey,
+      statusName: row.statusName,
+    };
+  }
+
+  async updateStatusWithHistory(params: {
+    occurrenceId: string;
+    previousStatusId: string;
+    newStatusId: string;
+    changedByUserId: string;
+    isActive?: boolean;
+  }): Promise<boolean> {
+    const {
+      occurrenceId,
+      previousStatusId,
+      newStatusId,
+      changedByUserId,
+      isActive = true,
+    } = params;
+
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({
+          statusId: newStatusId,
+          isActive,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(occurrencesTable.id, occurrenceId),
+            eq(occurrencesTable.isActive, true),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx.insert(statusHistoriesTable).values({
+        occurrenceId,
+        previousStatusId,
+        newStatusId,
+        changedByUserId,
+      });
+
+      return true;
     });
   }
 

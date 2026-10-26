@@ -19,6 +19,7 @@ export const occurrencesTable = pgTable(
     id: uuid('id')
       .default(sql`uuidv7()`)
       .primaryKey(),
+    protocol: varchar('protocol', { length: 5 }).unique().notNull(),
     address: varchar('address', { length: 255 }).notNull(),
     description: text('description').notNull(),
     situationType: varchar('situation_type', { length: 100 }),
@@ -27,7 +28,6 @@ export const occurrencesTable = pgTable(
     statusId: uuid('status_id')
       .references(() => occurrenceStatusesTable.id)
       .notNull(),
-    isAnonymous: boolean('is_anonymous').default(true).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
     userId: uuid('user_id')
       .references(() => usersTable.id, {

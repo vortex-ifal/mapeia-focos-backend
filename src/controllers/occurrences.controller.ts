@@ -5,7 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -14,10 +14,14 @@ import { DEV_USERS } from '../constants';
 import {
   CreatedResponseDto,
   CreateOccurrenceDto,
+  OccurrenceStatusResponseDto,
+  ProtocolParamDto,
   TerritorialContextQueryDto,
   TerritorialContextResponseDto,
   TriageQueueQueryDto,
   TriageQueueResponseDto,
+  UpdateOccurrenceStatusDto,
+  UuidParamDto,
 } from '../dtos';
 import { OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
@@ -79,6 +83,35 @@ export class OccurrencesController {
     );
   }
 
+  @Get('protocol/:protocol')
+  @ApiOperation({
+    summary: 'Consultar status de ocorrência por protocolo',
+    description:
+      'Retorna o status atual de uma ocorrência através de seu código de protocolo alfanumérico de 5 caracteres.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Status da ocorrência recuperado com sucesso.',
+    type: OccurrenceStatusResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetro de protocolo inválido (deve conter exatamente 5 caracteres alfanuméricos).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada para o protocolo informado.',
+  })
+  async getStatusByProtocol(
+    @Param() params: ProtocolParamDto,
+  ): Promise<OccurrenceStatusResponseDto> {
+    const readModel = await this.occurrenceService.findStatusByProtocol(
+      params.protocol,
+    );
+    return this.occurrenceMapper.toStatusDto(readModel);
+  }
+
   @Get(':id/territorial-context')
   @ApiOperation({
     summary: 'Contexto territorial de uma ocorrência',
@@ -86,6 +119,10 @@ export class OccurrencesController {
       'Retorna as ocorrências em um raio (metros) ao redor da ocorrência analisada, sem dados pessoais.',
   })
   @ApiResponse({ status: HttpStatus.OK, type: TerritorialContextResponseDto })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro ID inválido (deve ser um UUID válido).',
+  })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Ocorrência não encontrada.',
@@ -95,13 +132,48 @@ export class OccurrencesController {
     description: 'A ocorrência não possui coordenadas.',
   })
   async findTerritorialContext(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param() params: UuidParamDto,
     @Query() query: TerritorialContextQueryDto,
   ): Promise<TerritorialContextResponseDto> {
     const nearby = await this.occurrenceService.findTerritorialContext(
-      id,
+      params.id,
       query.radius,
     );
     return this.occurrenceMapper.toTerritorialContextDto(nearby, query.radius);
+  }
+
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Atualizar status de uma ocorrência',
+    description:
+      'Atualiza o status de uma ocorrência ativa para qualquer status válido no sistema (ex.: under_review, accepted, rejected, forwarded_for_inspection, resolved). Ao definir como rejected, a ocorrência sofre soft delete mantendo histórico.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Status da ocorrência atualizado com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros ou corpo da requisição inválidos (ex.: ID não é um UUID ou chave de status vazia).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'A ocorrência já se encontra com o status informado.',
+  })
+  async updateStatus(
+    @Param() params: UuidParamDto,
+    @Body() dto: UpdateOccurrenceStatusDto,
+  ): Promise<void> {
+    await this.occurrenceService.updateStatus(
+      params.id,
+      dto.statusKey,
+      DEV_USERS.MANAGER_ID,
+    );
   }
 }

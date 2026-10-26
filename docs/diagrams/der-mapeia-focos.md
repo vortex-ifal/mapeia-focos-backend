@@ -34,7 +34,6 @@ erDiagram
         uuid id PK
         string description
         uuid status_id FK
-        boolean is_anonymous
         boolean is_active
         uuid user_id FK
         uuid location_id FK
@@ -109,13 +108,11 @@ erDiagram
     }
 
     STATUS_HISTORY["STATUS_HISTORY (Histórico de Status)"] {
-        uuid id PK
-        uuid occurrence_id FK
+        uuid occurrence_id PK, FK
+        timestamp changed_at PK
         uuid changed_by_user_id FK
-        enum previous_status "pending | validated | discarded | assigned | inspected | resolved"
-        enum new_status "pending | validated | discarded | assigned | inspected | resolved"
-        string reason
-        timestamp changed_at
+        uuid previous_status_id FK
+        uuid new_status_id FK
     }
 
     NOTIFICATION["NOTIFICATION (Notificação)"] {
@@ -143,6 +140,8 @@ erDiagram
     OCCURRENCE ||--o{ ASSIGNMENT    : "is assigned via"
     OCCURRENCE ||--o{ INSPECTION    : "results in"
     OCCURRENCE ||--o{ STATUS_HISTORY : "tracks changes"
+    OCCURRENCE_STATUS ||--o{ STATUS_HISTORY : "referenced as previous_status"
+    OCCURRENCE_STATUS ||--o{ STATUS_HISTORY : "referenced as new_status"
     OCCURRENCE ||--o{ NOTIFICATION  : "triggers"
 
     USER ||--o{ TRIAGE              : "decides (manager)"
@@ -163,7 +162,7 @@ erDiagram
 | Status de ocorrência | Tabela `OCCURRENCE_STATUS` relacional com `key` única em inglês (`registered`, `under_review`, `rejected`, `accepted`, `forwarded_for_inspection`, `resolved`) e `name` descritivo |
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
-| Status | Entidade `STATUS_HISTORY` para auditoria completa de mudanças |
+| Status | Entidade/tabela `STATUS_HISTORY` para auditoria de mudanças com chave primária composta `(occurrence_id, changed_at)`, vinculando `previous_status_id` e `new_status_id` a `OCCURRENCE_STATUS` |
 | Mídias | Entidade `MEDIA` separada com `storage_key` e flag `is_public` (privacidade — RN03). Armazena a chave privada do Cloudflare R2; o acesso é intermediado via Presigned URLs com expiração curta. |
 | Atribuição | Entidade `ASSIGNMENT` registrando gestor, agente e data |
 | Localização | Entidade `LOCATION` separada (GPS ou manual — RF05) |

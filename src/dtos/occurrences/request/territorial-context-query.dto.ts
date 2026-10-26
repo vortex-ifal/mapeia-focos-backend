@@ -5,7 +5,7 @@ import {
   TERRITORIAL_DEFAULT_RADIUS_METERS,
   TERRITORIAL_MAX_RADIUS_METERS,
   TERRITORIAL_MIN_RADIUS_METERS,
-} from '../../constants';
+} from '../../../constants';
 
 export class TerritorialContextQueryDto {
   @ApiPropertyOptional({

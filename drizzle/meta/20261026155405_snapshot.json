@@ -1,6 +1,6 @@
 {
-  "id": "c8eddda8-9a5a-4615-be53-1489c15736ad",
-  "prevId": "b86e7b13-d9fb-42d5-8b7f-0adc6e1be3d2",
+  "id": "74bf555b-52fd-44ca-95f9-3e49b939b2ed",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -84,6 +84,46 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.occurrence_statuses": {
+      "name": "occurrence_statuses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "occurrence_statuses_key_unique": {
+          "name": "occurrence_statuses_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.occurrences": {
       "name": "occurrences",
       "schema": "",
@@ -94,6 +134,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "uuidv7()"
+        },
+        "protocol": {
+          "name": "protocol",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true
         },
         "address": {
           "name": "address",
@@ -125,20 +171,11 @@
           "primaryKey": false,
           "notNull": false
         },
-        "status": {
-          "name": "status",
-          "type": "occurrence_status",
-          "typeSchema": "public",
+        "status_id": {
+          "name": "status_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "is_anonymous": {
-          "name": "is_anonymous",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
+          "notNull": true
         },
         "is_active": {
           "name": "is_active",
@@ -147,11 +184,11 @@
           "notNull": true,
           "default": true
         },
-        "reported_by_user_id": {
-          "name": "reported_by_user_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -170,22 +207,43 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "occurrences_reported_by_user_id_users_id_fk": {
-          "name": "occurrences_reported_by_user_id_users_id_fk",
+        "occurrences_status_id_occurrence_statuses_id_fk": {
+          "name": "occurrences_status_id_occurrence_statuses_id_fk",
           "tableFrom": "occurrences",
-          "tableTo": "users",
+          "tableTo": "occurrence_statuses",
           "columnsFrom": [
-            "reported_by_user_id"
+            "status_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "occurrences_user_id_users_id_fk": {
+          "name": "occurrences_user_id_users_id_fk",
+          "tableFrom": "occurrences",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "occurrences_protocol_unique": {
+          "name": "occurrences_protocol_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "protocol"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "occurrences_latitude_range": {
@@ -197,6 +255,40 @@
           "value": "\"occurrences\".\"longitude\" BETWEEN -180 AND 180"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.roles": {
+      "name": "roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "roles_name_unique": {
+          "name": "roles_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.users": {
@@ -234,13 +326,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "role": {
-          "name": "role",
-          "type": "role",
-          "typeSchema": "public",
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'citizen'"
+          "notNull": true
         },
         "is_active": {
           "name": "is_active",
@@ -265,7 +355,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_role_id_roles_id_fk": {
+          "name": "users_role_id_roles_id_fk",
+          "tableFrom": "users",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "users_cpf_unique": {
@@ -295,27 +399,6 @@
       "values": [
         "photo",
         "video"
-      ]
-    },
-    "public.occurrence_status": {
-      "name": "occurrence_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "validated",
-        "discarded",
-        "assigned",
-        "inspected",
-        "resolved"
-      ]
-    },
-    "public.role": {
-      "name": "role",
-      "schema": "public",
-      "values": [
-        "citizen",
-        "agent",
-        "manager"
       ]
     }
   },

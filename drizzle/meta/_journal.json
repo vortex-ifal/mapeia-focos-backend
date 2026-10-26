@@ -5,71 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1791313779713,
-      "tag": "20261006190939_create_user_table",
+      "when": 1793030045473,
+      "tag": "20261026155405_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1791316352970,
-      "tag": "20261006195232_create_occurrences_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1791662768571,
-      "tag": "20261010200608_create_media_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1791730839812,
-      "tag": "20261011150039_add_coordinates_to_occurrences",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1792015394210,
-      "tag": "20261014220314_add_is_active_to_occurrences",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1792092671650,
-      "tag": "20261015193111_remove_contact_from_occurrences",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1792112088715,
-      "tag": "20261016005448_make_user_cpf_not_null",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1792114402988,
-      "tag": "20261016013322_create_roles_table_and_update_users_role",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1792201129308,
-      "tag": "20261017013849_create_occurrence_statuses_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1792205674518,
-      "tag": "20261017025434_rename_reported_by_to_user_id_and_set_not_null",
+      "when": 1793045115203,
+      "tag": "20261026200515_create_status_histories_table",
       "breakpoints": true
     },
     {
