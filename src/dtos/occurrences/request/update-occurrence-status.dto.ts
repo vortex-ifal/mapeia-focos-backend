@@ -1,12 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum } from 'class-validator';
+import { OccurrenceStatusKey } from '../../../entities';
 
 export class UpdateOccurrenceStatusDto {
   @ApiProperty({
     description: 'Chave do novo status da ocorrência',
-    example: 'under_review',
+    enum: OccurrenceStatusKey,
+    example: OccurrenceStatusKey.UNDER_REVIEW,
   })
-  @IsString({ message: 'A chave de status deve ser um texto' })
-  @IsNotEmpty({ message: 'A chave de status não pode estar vazia' })
-  statusKey: string;
+  @IsEnum(OccurrenceStatusKey, {
+    message: `A chave de status deve ser um dos valores válidos: ${Object.values(OccurrenceStatusKey).join(', ')}`,
+  })
+  statusKey: OccurrenceStatusKey;
 }

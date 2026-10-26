@@ -1,10 +1,15 @@
 import { randomBytes } from 'node:crypto';
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { OccurrenceEntity, type OccurrenceStatusReadModel } from '../entities';
+import {
+  OccurrenceEntity,
+  OccurrenceStatusKey,
+  type OccurrenceStatusReadModel,
+} from '../entities';
 import {
   OccurrencesRepository,
   OccurrenceStatusesRepository,
@@ -56,12 +61,46 @@ export class OccurrenceService {
 
     return readModel;
   }
-
   
   async findById(id: string): Promise<OccurrenceEntity | null> {
     return this.occurrencesRepository.findById(id);
   }
-  
+
+  async updateStatus(
+    id: string,
+    statusKey: OccurrenceStatusKey | string,
+  ): Promise<void> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    const newStatus =
+      await this.occurrenceStatusesRepository.findByKey(statusKey);
+    if (!newStatus || !newStatus.id) {
+      throw new InternalServerErrorException(
+        'Status informado não encontrado no sistema',
+      );
+    }
+
+    if (occurrence.status?.id === newStatus.id) {
+      throw new ConflictException(
+        'A ocorrência já se encontra com o status informado',
+      );
+    }
+    
+    const updated = await this.occurrencesRepository.updateStatus(
+      id,
+      newStatus.id,
+    );
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Falha ao atualizar o status da ocorrência',
+      );
+    }
+  }
+
   async softDelete(id: string): Promise<boolean> {
     return this.occurrencesRepository.softDelete(id);
   }

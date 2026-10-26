@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -14,6 +15,8 @@ import {
   CreateOccurrenceDto,
   OccurrenceStatusResponseDto,
   ProtocolParamDto,
+  UpdateOccurrenceStatusDto,
+  UuidParamDto,
 } from '../dtos';
 import { OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
@@ -78,5 +81,36 @@ export class OccurrencesController {
       params.protocol,
     );
     return this.occurrenceMapper.toStatusDto(readModel);
+  }
+
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Atualizar status de uma ocorrência',
+    description:
+      'Atualiza o status de uma ocorrência ativa para qualquer status válido no sistema (ex.: under_review, accepted, rejected, forwarded_for_inspection, resolved). Ao definir como rejected, a ocorrência sofre soft delete mantendo histórico.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Status da ocorrência atualizado com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros ou corpo da requisição inválidos (ex.: ID não é um UUID ou chave de status vazia).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'A ocorrência já se encontra com o status informado.',
+  })
+  async updateStatus(
+    @Param() params: UuidParamDto,
+    @Body() dto: UpdateOccurrenceStatusDto,
+  ): Promise<void> {
+    await this.occurrenceService.updateStatus(params.id, dto.statusKey);
   }
 }

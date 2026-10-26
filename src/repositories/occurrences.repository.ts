@@ -90,6 +90,27 @@ export class OccurrencesRepository {
     };
   }
 
+  async updateStatus(
+    id: string,
+    statusId: string,
+  ): Promise<boolean> {
+    const [updated] = await this.db
+      .update(occurrencesTable)
+      .set({
+        statusId,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(occurrencesTable.id, id),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
+      .returning({ id: occurrencesTable.id });
+
+    return !!updated;
+  }
+
   async softDelete(id: string): Promise<boolean> {
     const [updated] = await this.db
       .update(occurrencesTable)
