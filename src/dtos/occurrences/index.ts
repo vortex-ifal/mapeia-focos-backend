@@ -1,3 +1,2 @@
-export * from './create-occurrence.dto';
-export * from './protocol-param.dto';
-export * from './occurrence-status-response.dto';
+export * from './request';
+export * from './response';
