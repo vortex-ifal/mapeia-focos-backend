@@ -69,10 +69,18 @@ export class OccurrenceService {
   async updateStatus(
     id: string,
     statusKey: OccurrenceStatusKey | string,
+    userId: string,
   ): Promise<void> {
     const occurrence = await this.occurrencesRepository.findById(id);
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    const previousStatusId = occurrence.status?.id;
+    if (!previousStatusId) {
+      throw new InternalServerErrorException(
+        'Status atual da ocorrência não identificado no sistema',
+      );
     }
 
     const newStatus =
@@ -83,16 +91,20 @@ export class OccurrenceService {
       );
     }
 
-    if (occurrence.status?.id === newStatus.id) {
+    if (previousStatusId === newStatus.id) {
       throw new ConflictException(
         'A ocorrência já se encontra com o status informado',
       );
     }
-    
-    const updated = await this.occurrencesRepository.updateStatus(
-      id,
-      newStatus.id,
-    );
+
+    const isActive = statusKey !== OccurrenceStatusKey.REJECTED;
+    const updated = await this.occurrencesRepository.updateStatusWithHistory({
+      occurrenceId: id,
+      previousStatusId,
+      newStatusId: newStatus.id,
+      changedByUserId: userId,
+      isActive,
+    });
 
     if (!updated) {
       throw new InternalServerErrorException(

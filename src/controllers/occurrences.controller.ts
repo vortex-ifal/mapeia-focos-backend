@@ -111,6 +111,10 @@ export class OccurrencesController {
     @Param() params: UuidParamDto,
     @Body() dto: UpdateOccurrenceStatusDto,
   ): Promise<void> {
-    await this.occurrenceService.updateStatus(params.id, dto.statusKey);
+    await this.occurrenceService.updateStatus(
+      params.id,
+      dto.statusKey,
+      DEV_USERS.MANAGER_ID,
+    );
   }
 }

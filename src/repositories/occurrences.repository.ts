@@ -6,6 +6,7 @@ import {
   type DrizzleDB,
   occurrencesTable,
   occurrenceStatusesTable,
+  statusHistoriesTable,
 } from '../infra';
 import { OccurrenceMapper } from '../mappers';
 
@@ -90,25 +91,50 @@ export class OccurrencesRepository {
     };
   }
 
-  async updateStatus(
-    id: string,
-    statusId: string,
-  ): Promise<boolean> {
-    const [updated] = await this.db
-      .update(occurrencesTable)
-      .set({
-        statusId,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(occurrencesTable.id, id),
-          eq(occurrencesTable.isActive, true),
-        ),
-      )
-      .returning({ id: occurrencesTable.id });
+  async updateStatusWithHistory(params: {
+    occurrenceId: string;
+    previousStatusId: string;
+    newStatusId: string;
+    changedByUserId: string;
+    isActive?: boolean;
+  }): Promise<boolean> {
+    const {
+      occurrenceId,
+      previousStatusId,
+      newStatusId,
+      changedByUserId,
+      isActive = true,
+    } = params;
 
-    return !!updated;
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({
+          statusId: newStatusId,
+          isActive,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(occurrencesTable.id, occurrenceId),
+            eq(occurrencesTable.isActive, true),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx.insert(statusHistoriesTable).values({
+        occurrenceId,
+        previousStatusId,
+        newStatusId,
+        changedByUserId,
+      });
+
+      return true;
+    });
   }
 
   async softDelete(id: string): Promise<boolean> {

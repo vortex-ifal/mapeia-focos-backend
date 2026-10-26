@@ -8,6 +8,13 @@
       "when": 1793030045473,
       "tag": "20261026155405_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793045115203,
+      "tag": "20261026200515_create_status_histories_table",
+      "breakpoints": true
     }
   ]
 }
