@@ -1,2 +1,0 @@
-CREATE INDEX IF NOT EXISTS "occurrences_status_created_at_idx" ON "occurrences" USING btree ("status_id","created_at");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "occurrences_coordinates_idx" ON "occurrences" USING btree ("latitude","longitude");
