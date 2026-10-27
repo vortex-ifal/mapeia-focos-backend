@@ -1,18 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-
-export class OccurrenceStatusSummaryDto {
-  @ApiProperty({
-    description: 'Chave identificadora do status',
-    example: 'registered',
-  })
-  key: string;
-
-  @ApiProperty({
-    description: 'Nome legível do status',
-    example: 'Registrada',
-  })
-  name: string;
-}
+import { OccurrenceStatusResponseDto } from './occurrence-status-response.dto';
 
 export class OccurrenceListItemResponseDto {
   @ApiProperty({ description: 'Identificador único da ocorrência' })
@@ -45,6 +32,6 @@ export class OccurrenceListItemResponseDto {
   })
   waitingMinutes: number;
 
-  @ApiProperty({ type: OccurrenceStatusSummaryDto })
-  status: OccurrenceStatusSummaryDto;
+  @ApiProperty({ type: OccurrenceStatusResponseDto })
+  status: OccurrenceStatusResponseDto;
 }

@@ -22,7 +22,9 @@ import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
+  OccurrenceDetailResponseDto,
   OccurrenceListItemResponseDto,
+  OccurrenceProtocolStatusResponseDto,
   OccurrenceStatusResponseDto,
   PaginationResponseDto,
   ProtocolParamDto,
@@ -119,7 +121,7 @@ export class OccurrencesController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Status da ocorrência recuperado com sucesso.',
-    type: OccurrenceStatusResponseDto,
+    type: OccurrenceProtocolStatusResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -132,7 +134,7 @@ export class OccurrencesController {
   })
   async getStatusByProtocol(
     @Param() params: ProtocolParamDto,
-  ): Promise<OccurrenceStatusResponseDto> {
+  ): Promise<OccurrenceProtocolStatusResponseDto> {
     const readModel = await this.occurrenceService.findStatusByProtocol(
       params.protocol,
     );
@@ -168,6 +170,32 @@ export class OccurrencesController {
       query.limit,
     );
     return this.occurrenceMapper.toTerritorialContextDto(nearby, query.radius);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Buscar detalhes de uma ocorrência por ID',
+    description:
+      'Retorna os dados detalhados da ocorrência ativa e suas mídias anexadas, omitindo dados sensíveis do cidadão (user_id).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Detalhes da ocorrência recuperados com sucesso.',
+    type: OccurrenceDetailResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro ID inválido (deve ser um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  async findById(
+    @Param() params: UuidParamDto,
+  ): Promise<OccurrenceDetailResponseDto> {
+    const readModel = await this.occurrenceService.findDetailsById(params.id);
+    return this.occurrenceMapper.toDetailsDto(readModel);
   }
 
   @Patch(':id/status')

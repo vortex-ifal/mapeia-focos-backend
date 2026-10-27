@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import { MediaEntity } from '../entities';
 import { DRIZZLE_PROVIDER, type DrizzleDB, mediaTable, occurrencesTable } from '../infra';
 import { MediaMapper } from '../mappers';
@@ -90,5 +90,15 @@ export class MediaRepository {
     }
 
     return this.mapper.toDomainFromPersistence(row);
+  }
+
+  async findAllByOccurrenceId(occurrenceId: string): Promise<MediaEntity[]> {
+    const rows = await this.db
+      .select()
+      .from(mediaTable)
+      .where(eq(mediaTable.occurrenceId, occurrenceId))
+      .orderBy(asc(mediaTable.uploadedAt));
+
+    return rows.map((row) => this.mapper.toDomainFromPersistence(row));
   }
 }

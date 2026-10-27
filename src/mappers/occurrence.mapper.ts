@@ -5,6 +5,7 @@ import {
   OccurrenceStatusEntity,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
+  type OccurrenceDetailsReadModel,
   type OccurrenceStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -13,7 +14,9 @@ import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   NearbyOccurrenceDto,
+  OccurrenceDetailResponseDto,
   OccurrenceListItemResponseDto,
+  OccurrenceProtocolStatusResponseDto,
   OccurrenceStatusResponseDto,
   PaginationResponseDto,
   TerritorialContextResponseDto,
@@ -72,7 +75,7 @@ export class OccurrenceMapper {
 
   toStatusDto(
     readModel: OccurrenceStatusReadModel,
-  ): OccurrenceStatusResponseDto {
+  ): OccurrenceProtocolStatusResponseDto {
     return {
       protocol: readModel.protocol,
       statusKey: readModel.statusKey,
@@ -175,6 +178,33 @@ export class OccurrenceMapper {
       radiusMeters,
       total: readModels.length,
       items: readModels.map((item) => this.toNearbyDto(item)),
+    };
+  }
+
+  toDetailsDto(
+    readModel: OccurrenceDetailsReadModel,
+  ): OccurrenceDetailResponseDto {
+    return {
+      id: readModel.id,
+      protocol: readModel.protocol,
+      address: readModel.address,
+      description: readModel.description,
+      situationType: readModel.situationType,
+      latitude: readModel.latitude,
+      longitude: readModel.longitude,
+      status: {
+        key: readModel.status.key,
+        name: readModel.status.name,
+      },
+      createdAt: readModel.createdAt,
+      updatedAt: readModel.updatedAt,
+      media: readModel.media.map((item) => ({
+        id: item.id,
+        mimeType: item.mimeType,
+        fileSizeBytes: item.fileSizeBytes,
+        type: item.type,
+        uploadedAt: item.uploadedAt,
+      })),
     };
   }
 

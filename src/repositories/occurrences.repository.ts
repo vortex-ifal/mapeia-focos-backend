@@ -5,11 +5,13 @@ import {
   OccurrenceStatusKey,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
+  type OccurrenceDetailsReadModel,
   type OccurrenceStatusReadModel,
 } from '../entities';
 import {
   DRIZZLE_PROVIDER,
   type DrizzleDB,
+  mediaTable,
   occurrencesTable,
   occurrenceStatusesTable,
   statusHistoriesTable,
@@ -67,6 +69,73 @@ export class OccurrencesRepository {
       ...row.occurrence,
       status: row.status,
     });
+  }
+
+  async findDetailsById(
+    id: string,
+  ): Promise<OccurrenceDetailsReadModel | null> {
+    const [row] = await this.db
+      .select({
+        id: occurrencesTable.id,
+        protocol: occurrencesTable.protocol,
+        address: occurrencesTable.address,
+        description: occurrencesTable.description,
+        situationType: occurrencesTable.situationType,
+        latitude: occurrencesTable.latitude,
+        longitude: occurrencesTable.longitude,
+        createdAt: occurrencesTable.createdAt,
+        updatedAt: occurrencesTable.updatedAt,
+        statusKey: occurrenceStatusesTable.key,
+        statusName: occurrenceStatusesTable.name,
+      })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    const mediaRows = await this.db
+      .select({
+        id: mediaTable.id,
+        mimeType: mediaTable.mimeType,
+        fileSizeBytes: mediaTable.fileSizeBytes,
+        type: mediaTable.type,
+        uploadedAt: mediaTable.uploadedAt,
+      })
+      .from(mediaTable)
+      .where(eq(mediaTable.occurrenceId, id))
+      .orderBy(asc(mediaTable.uploadedAt));
+
+    return {
+      id: row.id,
+      protocol: row.protocol,
+      address: row.address,
+      description: row.description,
+      situationType: row.situationType,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      status: {
+        key: row.statusKey,
+        name: row.statusName,
+      },
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      media: mediaRows.map((m) => ({
+        id: m.id,
+        mimeType: m.mimeType,
+        fileSizeBytes: Number(m.fileSizeBytes),
+        type: m.type,
+        uploadedAt: m.uploadedAt,
+      })),
+    };
   }
 
   async findStatusByProtocol(

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { OccurrenceStatusSummaryDto } from './occurrence-list-item-response.dto';
+import { OccurrenceStatusResponseDto } from './occurrence-status-response.dto';
 
 export class NearbyOccurrenceDto {
   @ApiProperty()
@@ -17,8 +17,8 @@ export class NearbyOccurrenceDto {
   })
   distanceMeters: number;
 
-  @ApiProperty({ type: OccurrenceStatusSummaryDto })
-  status: OccurrenceStatusSummaryDto;
+  @ApiProperty({ type: OccurrenceStatusResponseDto })
+  status: OccurrenceStatusResponseDto;
 
   @ApiProperty({ description: 'Data de criação (ISO 8601)' })
   createdAt: string;
