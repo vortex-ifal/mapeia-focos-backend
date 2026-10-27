@@ -8,6 +8,7 @@ import {
   timestamp,
   numeric,
   check,
+  index, // 1. Adicionado o import do index
 } from 'drizzle-orm/pg-core';
 import { occurrenceStatusesTable } from './occurrence-status.schema';
 import { usersTable } from './user.schema';
@@ -45,6 +46,12 @@ export const occurrencesTable = pgTable(
       'occurrences_longitude_range',
       sql`${table.longitude} BETWEEN -180 AND 180`,
     ),
+    // 2. Índices adicionados abaixo:
+    index('occurrences_status_created_at_idx').on(
+      table.statusId,
+      table.createdAt,
+    ),
+    index('occurrences_coordinates_idx').on(table.latitude, table.longitude),
   ],
 );
 

@@ -7,14 +7,27 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
 import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
+  FindAllOccurrencesQueryDto,
+  OccurrenceListItemResponseDto,
   OccurrenceStatusResponseDto,
+  PaginationResponseDto,
   ProtocolParamDto,
+  TerritorialContextQueryDto,
+  TerritorialContextResponseDto,
   UpdateOccurrenceStatusDto,
   UuidParamDto,
 } from '../dtos';
@@ -43,7 +56,8 @@ export class OccurrencesController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Dados da requisição inválidos (ex.: validações de campos ou coordenadas).',
+    description:
+      'Dados da requisição inválidos (ex.: validações de campos ou coordenadas).',
   })
   async create(
     @Body() dto: CreateOccurrenceDto,
@@ -54,6 +68,46 @@ export class OccurrencesController {
     );
     const createdOccurrence = await this.occurrenceService.create(domainEntity);
     return this.occurrenceMapper.toCreateResponseDto(createdOccurrence);
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Listar ocorrências com paginação e filtros',
+    description:
+      'Retorna a lista paginada de ocorrências ativas no sistema, permitindo filtrar por chave de status (ex.: registered para a fila de triagem da Central Operacional).',
+  })
+  @ApiExtraModels(PaginationResponseDto, OccurrenceListItemResponseDto)
+  @ApiOkResponse({
+    description: 'Lista paginada de ocorrências recuperada com sucesso.',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(PaginationResponseDto) },
+        {
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: getSchemaPath(OccurrenceListItemResponseDto) },
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros de paginação ou filtro inválidos (ex.: página menor que 1 ou chave de status inexistente).',
+  })
+  async findAll(
+    @Query() query: FindAllOccurrencesQueryDto,
+  ): Promise<PaginationResponseDto<OccurrenceListItemResponseDto>> {
+    const paginatedReadModel = await this.occurrenceService.findAll(
+      query.page,
+      query.pageSize,
+      query.statusKey,
+    );
+
+    return this.occurrenceMapper.toPaginatedListDto(paginatedReadModel);
   }
 
   @Get('protocol/:protocol')
@@ -83,6 +137,37 @@ export class OccurrencesController {
       params.protocol,
     );
     return this.occurrenceMapper.toStatusDto(readModel);
+  }
+
+  @Get(':id/territorial-context')
+  @ApiOperation({
+    summary: 'Contexto territorial de uma ocorrência',
+    description:
+      'Retorna as ocorrências em um raio (metros) ao redor da ocorrência analisada, sem dados pessoais.',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: TerritorialContextResponseDto })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro ID inválido (deve ser um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'A ocorrência não possui coordenadas.',
+  })
+  async findTerritorialContext(
+    @Param() params: UuidParamDto,
+    @Query() query: TerritorialContextQueryDto,
+  ): Promise<TerritorialContextResponseDto> {
+    const nearby = await this.occurrenceService.findTerritorialContext(
+      params.id,
+      query.radius,
+      query.limit,
+    );
+    return this.occurrenceMapper.toTerritorialContextDto(nearby, query.radius);
   }
 
   @Patch(':id/status')

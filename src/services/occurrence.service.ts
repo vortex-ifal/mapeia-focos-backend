@@ -4,18 +4,23 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
+  createPaginationReadModel,
   OccurrenceEntity,
   OccurrenceStatusKey,
+  type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
+  type PaginationReadModel,
 } from '../entities';
 import {
   OccurrencesRepository,
   OccurrenceStatusesRepository,
   UsersRepository,
 } from '../repositories';
+import { TERRITORIAL_DEFAULT_LIMIT } from '../constants';
 
 @Injectable()
 export class OccurrenceService {
@@ -35,7 +40,9 @@ export class OccurrenceService {
 
     if (!entity.status) {
       const defaultStatus =
-        await this.occurrenceStatusesRepository.findByKey('registered');
+        await this.occurrenceStatusesRepository.findByKey(
+          OccurrenceStatusKey.REGISTERED,
+        );
       if (!defaultStatus) {
         throw new InternalServerErrorException(
           'Status padrão "registered" não encontrado no sistema',
@@ -64,7 +71,7 @@ export class OccurrenceService {
 
     return readModel;
   }
-  
+
   async findById(id: string): Promise<OccurrenceEntity | null> {
     return this.occurrencesRepository.findById(id);
   }
@@ -118,6 +125,44 @@ export class OccurrenceService {
 
   async softDelete(id: string): Promise<boolean> {
     return this.occurrencesRepository.softDelete(id);
+  }
+
+  async findAll(
+    page: number,
+    pageSize: number,
+    statusKey?: OccurrenceStatusKey,
+  ): Promise<PaginationReadModel<OccurrenceEntity>> {
+    const { items, total } = await this.occurrencesRepository.findAll(
+      page,
+      pageSize,
+      statusKey,
+    );
+    return createPaginationReadModel(items, page, pageSize, total);
+  }
+
+  async findTerritorialContext(
+    id: string,
+    radiusMeters: number,
+    limit: number = TERRITORIAL_DEFAULT_LIMIT,
+  ): Promise<NearbyOccurrenceReadModel[]> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada');
+    }
+
+    if (occurrence.latitude === null || occurrence.longitude === null) {
+      throw new UnprocessableEntityException(
+        'A ocorrência não possui coordenadas para calcular o contexto territorial',
+      );
+    }
+
+    return this.occurrencesRepository.findNearby(
+      occurrence.latitude,
+      occurrence.longitude,
+      radiusMeters,
+      limit,
+      id,
+    );
   }
 
   private async generateUniqueProtocol(): Promise<string> {
