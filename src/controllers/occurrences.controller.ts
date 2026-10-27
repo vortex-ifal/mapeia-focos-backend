@@ -23,9 +23,8 @@ import {
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
   OccurrenceDetailResponseDto,
-  OccurrenceListItemResponseDto,
   OccurrenceProtocolStatusResponseDto,
-  OccurrenceStatusResponseDto,
+  OccurrenceResponseDto,
   PaginationResponseDto,
   ProtocolParamDto,
   TerritorialContextQueryDto,
@@ -78,7 +77,7 @@ export class OccurrencesController {
     description:
       'Retorna a lista paginada de ocorrências ativas no sistema, permitindo filtrar por chave de status (ex.: registered para a fila de triagem da Central Operacional).',
   })
-  @ApiExtraModels(PaginationResponseDto, OccurrenceListItemResponseDto)
+  @ApiExtraModels(PaginationResponseDto, OccurrenceResponseDto)
   @ApiOkResponse({
     description: 'Lista paginada de ocorrências recuperada com sucesso.',
     schema: {
@@ -88,7 +87,7 @@ export class OccurrencesController {
           properties: {
             data: {
               type: 'array',
-              items: { $ref: getSchemaPath(OccurrenceListItemResponseDto) },
+              items: { $ref: getSchemaPath(OccurrenceResponseDto) },
             },
           },
         },
@@ -102,7 +101,7 @@ export class OccurrencesController {
   })
   async findAll(
     @Query() query: FindAllOccurrencesQueryDto,
-  ): Promise<PaginationResponseDto<OccurrenceListItemResponseDto>> {
+  ): Promise<PaginationResponseDto<OccurrenceResponseDto>> {
     const paginatedReadModel = await this.occurrenceService.findAll(
       query.page,
       query.pageSize,

@@ -15,9 +15,8 @@ import {
   CreateOccurrenceResponseDto,
   NearbyOccurrenceDto,
   OccurrenceDetailResponseDto,
-  OccurrenceListItemResponseDto,
   OccurrenceProtocolStatusResponseDto,
-  OccurrenceStatusResponseDto,
+  OccurrenceResponseDto,
   PaginationResponseDto,
   TerritorialContextResponseDto,
 } from '../dtos';
@@ -155,13 +154,10 @@ export class OccurrenceMapper {
 
   toPaginatedListDto(
     readModel: PaginationReadModel<OccurrenceEntity>,
-  ): PaginationResponseDto<OccurrenceListItemResponseDto> {
-    const now = new Date();
-    const data = readModel.data.map((entity) =>
-      this.toListItemDto(entity, now),
-    );
+  ): PaginationResponseDto<OccurrenceResponseDto> {
+    const data = readModel.data.map((entity) => this.toDto(entity));
 
-    return new PaginationResponseDto<OccurrenceListItemResponseDto>(
+    return new PaginationResponseDto<OccurrenceResponseDto>(
       data,
       readModel.page,
       readModel.pageSize,
@@ -208,21 +204,17 @@ export class OccurrenceMapper {
     };
   }
 
-  private toListItemDto(
-    entity: OccurrenceEntity,
-    now: Date,
-  ): OccurrenceListItemResponseDto {
-    const createdAt = entity.createdAt ?? now;
-    const waitingMs = Math.max(0, now.getTime() - createdAt.getTime());
-
+  toDto(entity: OccurrenceEntity): OccurrenceResponseDto {
     return {
       id: entity.id ?? '',
       protocol: entity.protocol ?? '',
-      address: this.simplifyAddress(entity.address),
+      address: entity.address,
+      description: entity.description,
+      situationType: entity.situationType ?? null,
       latitude: entity.latitude,
       longitude: entity.longitude,
-      createdAt: createdAt.toISOString(),
-      waitingMinutes: Math.floor(waitingMs / 60000),
+      createdAt: entity.createdAt ?? new Date(),
+      updatedAt: entity.updatedAt ?? new Date(),
       status: {
         key: entity.status?.key ?? '',
         name: entity.status?.name ?? '',
@@ -239,14 +231,5 @@ export class OccurrenceMapper {
       status: { key: item.statusKey, name: item.statusName },
       createdAt: item.createdAt.toISOString(),
     };
-  }
-
-  private simplifyAddress(address: string): string {
-    return address
-      .split(',')
-      .slice(0, 2)
-      .map((part) => part.trim())
-      .join(', ')
-      .slice(0, 80);
   }
 }
