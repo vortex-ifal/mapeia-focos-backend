@@ -6,7 +6,7 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailsReadModel,
-  type OccurrenceStatusReadModel,
+  type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
 import {
@@ -74,7 +74,7 @@ export class OccurrenceMapper {
   }
 
   toStatusDto(
-    readModel: OccurrenceStatusReadModel,
+    readModel: OccurrenceProtocolStatusReadModel,
   ): OccurrenceProtocolStatusResponseDto {
     return {
       protocol: readModel.protocol,

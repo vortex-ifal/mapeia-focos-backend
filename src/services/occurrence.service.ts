@@ -13,7 +13,7 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailsReadModel,
-  type OccurrenceStatusReadModel,
+  type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
 import {
@@ -59,7 +59,7 @@ export class OccurrenceService {
 
   async findStatusByProtocol(
     protocol: string,
-  ): Promise<OccurrenceStatusReadModel> {
+  ): Promise<OccurrenceProtocolStatusReadModel> {
     const normalizedProtocol = protocol.trim().toLowerCase();
     const readModel =
       await this.occurrencesRepository.findStatusByProtocol(normalizedProtocol);

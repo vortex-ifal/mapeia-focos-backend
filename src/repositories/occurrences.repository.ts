@@ -6,7 +6,7 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailsReadModel,
-  type OccurrenceStatusReadModel,
+  type OccurrenceProtocolStatusReadModel,
 } from '../entities';
 import {
   DRIZZLE_PROVIDER,
@@ -140,7 +140,7 @@ export class OccurrencesRepository {
 
   async findStatusByProtocol(
     protocol: string,
-  ): Promise<OccurrenceStatusReadModel | null> {
+  ): Promise<OccurrenceProtocolStatusReadModel | null> {
     const [row] = await this.db
       .select({
         protocol: occurrencesTable.protocol,
