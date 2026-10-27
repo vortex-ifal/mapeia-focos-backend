@@ -8,9 +8,9 @@ import {
 } from '@nestjs/common';
 import {
   createPaginationReadModel,
-  NearbyOccurrenceEntity,
   OccurrenceEntity,
   OccurrenceStatusKey,
+  type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
   type PaginationReadModel,
@@ -20,7 +20,7 @@ import {
   OccurrenceStatusesRepository,
   UsersRepository,
 } from '../repositories';
-import { TERRITORIAL_MAX_RESULTS } from '../constants';
+import { TERRITORIAL_DEFAULT_LIMIT } from '../constants';
 
 @Injectable()
 export class OccurrenceService {
@@ -143,7 +143,8 @@ export class OccurrenceService {
   async findTerritorialContext(
     id: string,
     radiusMeters: number,
-  ): Promise<NearbyOccurrenceEntity[]> {
+    limit: number = TERRITORIAL_DEFAULT_LIMIT,
+  ): Promise<NearbyOccurrenceReadModel[]> {
     const occurrence = await this.occurrencesRepository.findById(id);
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada');
@@ -156,9 +157,11 @@ export class OccurrenceService {
     }
 
     return this.occurrencesRepository.findNearby(
-      { id, latitude: occurrence.latitude, longitude: occurrence.longitude },
+      occurrence.latitude,
+      occurrence.longitude,
       radiusMeters,
-      TERRITORIAL_MAX_RESULTS,
+      limit,
+      id,
     );
   }
 

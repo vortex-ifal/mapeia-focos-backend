@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
-  NearbyOccurrenceBuilder,
-  NearbyOccurrenceEntity,
   OccurrenceBuilder,
   OccurrenceEntity,
   OccurrenceStatusEntity,
+  type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
   type PaginationReadModel,
@@ -133,20 +132,22 @@ export class OccurrenceMapper {
     return builder.build();
   }
 
-  toNearbyDomainFromPersistence(
+  toNearbyReadModelFromPersistence(
     row: NearbyOccurrenceRow,
-  ): NearbyOccurrenceEntity {
+  ): NearbyOccurrenceReadModel {
     if (row.latitude === null || row.longitude === null) {
       throw new Error('A nearby occurrence must have coordinates');
     }
 
-    return NearbyOccurrenceBuilder.create()
-      .withId(row.id)
-      .withCoordinates(row.latitude, row.longitude)
-      .withStatus(row.statusKey, row.statusName)
-      .withDistanceMeters(Math.round(row.distanceMeters))
-      .withCreatedAt(row.createdAt)
-      .build();
+    return {
+      id: row.id,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      statusKey: row.statusKey,
+      statusName: row.statusName,
+      distanceMeters: Math.round(row.distanceMeters),
+      createdAt: row.createdAt,
+    };
   }
 
   toPaginatedListDto(
@@ -167,13 +168,13 @@ export class OccurrenceMapper {
   }
 
   toTerritorialContextDto(
-    entities: NearbyOccurrenceEntity[],
+    readModels: NearbyOccurrenceReadModel[],
     radiusMeters: number,
   ): TerritorialContextResponseDto {
     return {
       radiusMeters,
-      total: entities.length,
-      items: entities.map((entity) => this.toNearbyDto(entity)),
+      total: readModels.length,
+      items: readModels.map((item) => this.toNearbyDto(item)),
     };
   }
 
@@ -199,14 +200,14 @@ export class OccurrenceMapper {
     };
   }
 
-  private toNearbyDto(entity: NearbyOccurrenceEntity): NearbyOccurrenceDto {
+  private toNearbyDto(item: NearbyOccurrenceReadModel): NearbyOccurrenceDto {
     return {
-      id: entity.id,
-      latitude: entity.latitude,
-      longitude: entity.longitude,
-      distanceMeters: entity.distanceMeters,
-      status: { key: entity.statusKey, name: entity.statusName },
-      createdAt: entity.createdAt.toISOString(),
+      id: item.id,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      distanceMeters: item.distanceMeters,
+      status: { key: item.statusKey, name: item.statusName },
+      createdAt: item.createdAt.toISOString(),
     };
   }
 

@@ -165,6 +165,7 @@ export class OccurrencesController {
     const nearby = await this.occurrenceService.findTerritorialContext(
       params.id,
       query.radius,
+      query.limit,
     );
     return this.occurrenceMapper.toTerritorialContextDto(nearby, query.radius);
   }

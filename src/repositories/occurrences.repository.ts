@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, between, count, eq, lte, ne, sql } from 'drizzle-orm';
 import {
-  NearbyOccurrenceEntity,
   OccurrenceEntity,
   OccurrenceStatusKey,
+  type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
 } from '../entities';
@@ -214,26 +214,28 @@ export class OccurrencesRepository {
   }
 
   async findNearby(
-    origin: { id: string; latitude: number; longitude: number },
+    latitude: number,
+    longitude: number,
     radiusMeters: number,
     limit: number,
-  ): Promise<NearbyOccurrenceEntity[]> {
+    excludeId?: string,
+  ): Promise<NearbyOccurrenceReadModel[]> {
     const metersPerDegree = 111_320;
     const deltaLat = radiusMeters / metersPerDegree;
     const deltaLng =
       radiusMeters /
-      (metersPerDegree * Math.cos((origin.latitude * Math.PI) / 180));
+      (metersPerDegree * Math.cos((latitude * Math.PI) / 180));
 
     // Pré-calcula os limites da caixa delimitadora para evitar erros de parser do TS no between
-    const minLat = origin.latitude - deltaLat;
-    const maxLat = origin.latitude + deltaLat;
-    const minLng = origin.longitude - deltaLng;
-    const maxLng = origin.longitude + deltaLng;
+    const minLat = latitude - deltaLat;
+    const maxLat = latitude + deltaLat;
+    const minLng = longitude - deltaLng;
+    const maxLng = longitude + deltaLng;
 
     const lat = sql`${occurrencesTable.latitude}::float8`;
     const lng = sql`${occurrencesTable.longitude}::float8`;
-    const originLat = sql`${origin.latitude}::float8`;
-    const originLng = sql`${origin.longitude}::float8`;
+    const originLat = sql`${latitude}::float8`;
+    const originLng = sql`${longitude}::float8`;
 
     const distance = sql<number>`6371000 * acos(least(1.0, greatest(-1.0,
       cos(radians(${originLat})) * cos(radians(${lat})) * cos(radians(${lng}) - radians(${originLng}))
@@ -258,7 +260,7 @@ export class OccurrencesRepository {
       .where(
         and(
           eq(occurrencesTable.isActive, true),
-          ne(occurrencesTable.id, origin.id),
+          excludeId ? ne(occurrencesTable.id, excludeId) : undefined,
           ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
           between(occurrencesTable.latitude, minLat, maxLat),
           between(occurrencesTable.longitude, minLng, maxLng),
@@ -268,6 +270,6 @@ export class OccurrencesRepository {
       .orderBy(asc(distance))
       .limit(limit);
 
-    return rows.map((row) => this.mapper.toNearbyDomainFromPersistence(row));
+    return rows.map((row) => this.mapper.toNearbyReadModelFromPersistence(row));
   }
 }

@@ -1,4 +1,4 @@
-export interface NearbyOccurrenceProps {
+export interface NearbyOccurrenceReadModel {
   id: string;
   latitude: number;
   longitude: number;
