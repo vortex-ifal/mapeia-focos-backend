@@ -7,11 +7,13 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import {
+  createPaginationReadModel,
   NearbyOccurrenceEntity,
   OccurrenceEntity,
   OccurrenceStatusKey,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
+  type PaginationReadModel,
 } from '../entities';
 import {
   OccurrencesRepository,
@@ -125,15 +127,17 @@ export class OccurrenceService {
     return this.occurrencesRepository.softDelete(id);
   }
 
-  async findAwaitingTriage(
-    limit: number,
-    offset: number,
-  ): Promise<OccurrenceEntity[]> {
-    return this.occurrencesRepository.findAwaitingTriage(limit, offset);
-  }
-
-  async countAwaitingTriage(): Promise<number> {
-    return this.occurrencesRepository.countAwaitingTriage();
+  async findAll(
+    page: number,
+    pageSize: number,
+    statusKey?: OccurrenceStatusKey,
+  ): Promise<PaginationReadModel<OccurrenceEntity>> {
+    const { items, total } = await this.occurrencesRepository.findAll(
+      page,
+      pageSize,
+      statusKey,
+    );
+    return createPaginationReadModel(items, page, pageSize, total);
   }
 
   async findTerritorialContext(

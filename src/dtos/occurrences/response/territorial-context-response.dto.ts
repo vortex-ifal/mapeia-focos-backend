@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { OccurrenceStatusSummaryDto } from './triage-queue-response.dto';
+import { OccurrenceStatusSummaryDto } from './occurrence-list-item-response.dto';
 
 export class NearbyOccurrenceDto {
   @ApiProperty()

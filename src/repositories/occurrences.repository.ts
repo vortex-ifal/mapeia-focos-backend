@@ -163,51 +163,54 @@ export class OccurrencesRepository {
     return !!updated;
   }
 
-  async findAwaitingTriage(
-    limit: number,
-    offset: number,
-  ): Promise<OccurrenceEntity[]> {
-    const rows = await this.db
-      .select({ occurrence: occurrencesTable, status: occurrenceStatusesTable })
-      .from(occurrencesTable)
-      .innerJoin(
-        occurrenceStatusesTable,
-        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
-      )
-      .where(
-        and(
-          eq(occurrenceStatusesTable.key, OccurrenceStatusKey.REGISTERED),
-          eq(occurrencesTable.isActive, true),
-        ),
-      )
-      .orderBy(asc(occurrencesTable.createdAt), asc(occurrencesTable.id))
-      .limit(limit)
-      .offset(offset);
+  async findAll(
+    page: number,
+    pageSize: number,
+    statusKey?: OccurrenceStatusKey,
+  ): Promise<{ items: OccurrenceEntity[]; total: number }> {
+    const skip = (page - 1) * pageSize;
 
-    return rows.map((row) =>
+    const whereConditions = and(
+      eq(occurrencesTable.isActive, true),
+      statusKey ? eq(occurrenceStatusesTable.key, statusKey) : undefined,
+    );
+
+    const [rows, [countResult]] = await Promise.all([
+      this.db
+        .select({
+          occurrence: occurrencesTable,
+          status: occurrenceStatusesTable,
+        })
+        .from(occurrencesTable)
+        .innerJoin(
+          occurrenceStatusesTable,
+          eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+        )
+        .where(whereConditions)
+        .orderBy(asc(occurrencesTable.createdAt), asc(occurrencesTable.id))
+        .limit(pageSize)
+        .offset(skip),
+      this.db
+        .select({ total: count() })
+        .from(occurrencesTable)
+        .innerJoin(
+          occurrenceStatusesTable,
+          eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+        )
+        .where(whereConditions),
+    ]);
+
+    const items = rows.map((row) =>
       this.mapper.toDomainFromPersistence({
         ...row.occurrence,
         status: row.status,
       }),
     );
-  }
 
-  async countAwaitingTriage(): Promise<number> {
-    const [result] = await this.db
-      .select({ total: count() })
-      .from(occurrencesTable)
-      .innerJoin(
-        occurrenceStatusesTable,
-        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
-      )
-      .where(
-        and(
-          eq(occurrenceStatusesTable.key, OccurrenceStatusKey.REGISTERED),
-          eq(occurrencesTable.isActive, true),
-        ),
-      );
-
-    return result?.total ?? 0;
+    return {
+      items,
+      total: countResult?.total ?? 0,
+    };
   }
 
   async findNearby(

@@ -7,16 +7,17 @@ import {
   OccurrenceStatusEntity,
   type OccurrenceCreatedReadModel,
   type OccurrenceStatusReadModel,
+  type PaginationReadModel,
 } from '../entities';
 import {
   CreatedResponseDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   NearbyOccurrenceDto,
+  OccurrenceListItemResponseDto,
   OccurrenceStatusResponseDto,
+  PaginationResponseDto,
   TerritorialContextResponseDto,
-  TriageQueueItemDto,
-  TriageQueueResponseDto,
 } from '../dtos';
 import {
   OccurrenceInsert,
@@ -148,19 +149,21 @@ export class OccurrenceMapper {
       .build();
   }
 
-  toTriageQueueDto(
-    entities: OccurrenceEntity[],
-    total: number,
-    limit: number,
-    offset: number,
-  ): TriageQueueResponseDto {
+  toPaginatedListDto(
+    readModel: PaginationReadModel<OccurrenceEntity>,
+  ): PaginationResponseDto<OccurrenceListItemResponseDto> {
     const now = new Date();
-    return {
-      items: entities.map((entity) => this.toTriageQueueItemDto(entity, now)),
-      total,
-      limit,
-      offset,
-    };
+    const data = readModel.data.map((entity) =>
+      this.toListItemDto(entity, now),
+    );
+
+    return new PaginationResponseDto<OccurrenceListItemResponseDto>(
+      data,
+      readModel.page,
+      readModel.pageSize,
+      readModel.total,
+      readModel.totalPages,
+    );
   }
 
   toTerritorialContextDto(
@@ -174,15 +177,16 @@ export class OccurrenceMapper {
     };
   }
 
-  private toTriageQueueItemDto(
+  private toListItemDto(
     entity: OccurrenceEntity,
     now: Date,
-  ): TriageQueueItemDto {
+  ): OccurrenceListItemResponseDto {
     const createdAt = entity.createdAt ?? now;
     const waitingMs = Math.max(0, now.getTime() - createdAt.getTime());
 
     return {
       id: entity.id ?? '',
+      protocol: entity.protocol ?? '',
       address: this.simplifyAddress(entity.address),
       latitude: entity.latitude,
       longitude: entity.longitude,

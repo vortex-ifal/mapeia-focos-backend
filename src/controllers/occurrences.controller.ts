@@ -9,17 +9,25 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
 import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
+  FindAllOccurrencesQueryDto,
+  OccurrenceListItemResponseDto,
   OccurrenceStatusResponseDto,
+  PaginationResponseDto,
   ProtocolParamDto,
   TerritorialContextQueryDto,
   TerritorialContextResponseDto,
-  TriageQueueQueryDto,
-  TriageQueueResponseDto,
   UpdateOccurrenceStatusDto,
   UuidParamDto,
 } from '../dtos';
@@ -62,27 +70,44 @@ export class OccurrencesController {
     return this.occurrenceMapper.toCreateResponseDto(createdOccurrence);
   }
 
-  @Get('triage')
+  @Get()
   @ApiOperation({
-    summary: 'Listar a fila de triagem',
+    summary: 'Listar ocorrências com paginação e filtros',
     description:
-      'Retorna as ocorrências aguardando triagem, da mais antiga para a mais recente, com resumo para a Central Operacional.',
+      'Retorna a lista paginada de ocorrências ativas no sistema, permitindo filtrar por chave de status (ex.: registered para a fila de triagem da Central Operacional).',
   })
-  @ApiResponse({ status: HttpStatus.OK, type: TriageQueueResponseDto })
-  async findTriageQueue(
-    @Query() query: TriageQueueQueryDto,
-  ): Promise<TriageQueueResponseDto> {
-    const [entities, total] = await Promise.all([
-      this.occurrenceService.findAwaitingTriage(query.limit, query.offset),
-      this.occurrenceService.countAwaitingTriage(),
-    ]);
-
-    return this.occurrenceMapper.toTriageQueueDto(
-      entities,
-      total,
-      query.limit,
-      query.offset,
+  @ApiExtraModels(PaginationResponseDto, OccurrenceListItemResponseDto)
+  @ApiOkResponse({
+    description: 'Lista paginada de ocorrências recuperada com sucesso.',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(PaginationResponseDto) },
+        {
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: getSchemaPath(OccurrenceListItemResponseDto) },
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros de paginação ou filtro inválidos (ex.: página menor que 1 ou chave de status inexistente).',
+  })
+  async findAll(
+    @Query() query: FindAllOccurrencesQueryDto,
+  ): Promise<PaginationResponseDto<OccurrenceListItemResponseDto>> {
+    const paginatedReadModel = await this.occurrenceService.findAll(
+      query.page,
+      query.pageSize,
+      query.statusKey,
     );
+
+    return this.occurrenceMapper.toPaginatedListDto(paginatedReadModel);
   }
 
   @Get('protocol/:protocol')
