@@ -102,27 +102,18 @@ export class OccurrencesRepository {
     };
   }
 
-  async updateStatusWithHistory(params: {
-    occurrenceId: string;
-    previousStatusId: string;
-    newStatusId: string;
-    changedByUserId: string;
-    isActive?: boolean;
-  }): Promise<boolean> {
-    const {
-      occurrenceId,
-      previousStatusId,
-      newStatusId,
-      changedByUserId,
-      isActive = true,
-    } = params;
+  async updateStatusWithHistory(
+    occurrenceId: string,
+    previousStatusId: string,
+    newStatusId: string,
+    changedByUserId: string,
+  ): Promise<boolean> {
 
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           statusId: newStatusId,
-          isActive,
           updatedAt: new Date(),
         })
         .where(

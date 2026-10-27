@@ -107,14 +107,12 @@ export class OccurrenceService {
       );
     }
 
-    const isActive = statusKey !== OccurrenceStatusKey.REJECTED;
-    const updated = await this.occurrencesRepository.updateStatusWithHistory({
-      occurrenceId: id,
+    const updated = await this.occurrencesRepository.updateStatusWithHistory(
+      id,
       previousStatusId,
-      newStatusId: newStatus.id,
-      changedByUserId: userId,
-      isActive,
-    });
+      newStatus.id,
+      userId,
+    );
 
     if (!updated) {
       throw new InternalServerErrorException(

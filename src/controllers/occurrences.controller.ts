@@ -175,7 +175,7 @@ export class OccurrencesController {
   @ApiOperation({
     summary: 'Atualizar status de uma ocorrência',
     description:
-      'Atualiza o status de uma ocorrência ativa para qualquer status válido no sistema (ex.: under_review, accepted, rejected, forwarded_for_inspection, resolved). Ao definir como rejected, a ocorrência sofre soft delete mantendo histórico.',
+      'Atualiza o status de uma ocorrência ativa para qualquer status válido no sistema.',
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
