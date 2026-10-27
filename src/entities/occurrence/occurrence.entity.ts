@@ -1,3 +1,4 @@
+import { MediaEntity } from '../media';
 import { OccurrenceStatusEntity } from '../occurrence-status';
 import { OccurrenceProps } from './occurrence.props';
 
@@ -11,6 +12,7 @@ export class OccurrenceEntity {
   private readonly _longitude: number | null;
   private _status?: OccurrenceStatusEntity;
   private _userId: string;
+  private _media?: MediaEntity[];
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
 
@@ -24,6 +26,7 @@ export class OccurrenceEntity {
     this._longitude = props.longitude ?? null;
     this._status = props.status;
     this._userId = props.userId;
+    this._media = props.media ?? [];
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
   }
@@ -74,6 +77,14 @@ export class OccurrenceEntity {
 
   set userId(userId: string) {
     this._userId = userId;
+  }
+
+  get media(): MediaEntity[] {
+    return this._media ?? [];
+  }
+
+  set media(media: MediaEntity[] | undefined) {
+    this._media = media;
   }
 
   get createdAt(): Date | undefined {

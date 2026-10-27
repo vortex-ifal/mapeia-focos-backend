@@ -1,3 +1,4 @@
+import { MediaEntity } from '../media';
 import { OccurrenceStatusEntity } from '../occurrence-status';
 import { OccurrenceEntity } from './occurrence.entity';
 import { OccurrenceProps } from './occurrence.props';
@@ -52,6 +53,11 @@ export class OccurrenceBuilder {
 
   withStatus(status: OccurrenceStatusEntity): this {
     this.props.status = status;
+    return this;
+  }
+
+  withMedia(media?: MediaEntity[]): this {
+    this.props.media = media;
     return this;
   }
 

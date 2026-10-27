@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MediaBuilder, MediaEntity, MediaType } from '../entities';
-import { UploadMediaResponseDto } from '../dtos';
+import { MediaResponseDto, UploadMediaResponseDto } from '../dtos';
 import { MediaInsert, MediaSelect } from '../infra';
 
 @Injectable()
@@ -42,6 +42,23 @@ export class MediaMapper {
       storageKey: entity.storageKey,
       mimeType: entity.mimeType,
       fileSizeBytes: entity.fileSizeBytes,
+      uploadedAt: entity.uploadedAt,
+    };
+  }
+
+  toResponseDto(entity: MediaEntity): MediaResponseDto {
+    if (!entity.id) {
+      throw new Error('MediaEntity id is required to map to DTO');
+    }
+    if (!entity.uploadedAt) {
+      throw new Error('MediaEntity uploadedAt is required to map to DTO');
+    }
+
+    return {
+      id: entity.id,
+      mimeType: entity.mimeType,
+      fileSizeBytes: entity.fileSizeBytes,
+      type: entity.type,
       uploadedAt: entity.uploadedAt,
     };
   }

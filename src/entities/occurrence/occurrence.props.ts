@@ -1,3 +1,4 @@
+import { MediaEntity } from '../media';
 import { OccurrenceStatusEntity } from '../occurrence-status';
 
 export interface OccurrenceProps {
@@ -10,6 +11,7 @@ export interface OccurrenceProps {
   longitude?: number | null;
   status?: OccurrenceStatusEntity;
   userId: string;
+  media?: MediaEntity[];
   createdAt?: Date;
   updatedAt?: Date;
 }

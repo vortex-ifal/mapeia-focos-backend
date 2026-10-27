@@ -12,7 +12,6 @@ import {
   OccurrenceStatusKey,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
-  type OccurrenceDetailsReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -77,12 +76,12 @@ export class OccurrenceService {
     return this.occurrencesRepository.findById(id);
   }
 
-  async findDetailsById(id: string): Promise<OccurrenceDetailsReadModel> {
-    const details = await this.occurrencesRepository.findDetailsById(id);
-    if (!details) {
+  async findDetailsById(id: string): Promise<OccurrenceEntity> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
-    return details;
+    return occurrence;
   }
 
   async updateStatus(

@@ -193,8 +193,8 @@ export class OccurrencesController {
   async findById(
     @Param() params: UuidParamDto,
   ): Promise<OccurrenceDetailResponseDto> {
-    const readModel = await this.occurrenceService.findDetailsById(params.id);
-    return this.occurrenceMapper.toDetailsDto(readModel);
+    const entity = await this.occurrenceService.findDetailsById(params.id);
+    return this.occurrenceMapper.toDetailsDto(entity);
   }
 
   @Patch(':id/status')
