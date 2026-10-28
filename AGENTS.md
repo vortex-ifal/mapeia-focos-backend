@@ -45,6 +45,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
 7. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
 8. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
+   - **Atualização Obrigatória do DER:** Sempre que o banco de dados for alterado (criação/remoção de tabelas, adição/alteração de colunas, novos enums SQL, constraints ou relacionamentos), o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` **DEVE ser obrigatoriamente atualizado** para manter o modelo visual rigorosamente sincronizado com a persistência.
    - **Boas Práticas de Migrations:** Ao gerar novas migrações, **sempre utilize a flag `--name`** com um nome descritivo em `snake_case` (ex: `pnpm db:generate --name create_occurrences_table` ou `pnpm db:generate --name add_status_to_occurrences`). Garanta migrações atômicas e revise os arquivos SQL em `drizzle/`.
    - **Idempotência de Seeds (Sem TRUNCATE):** A implementação de seeds **NUNCA deve utilizar `TRUNCATE`** ou apagar dados existentes das tabelas. Utilize sempre operações de Upsert idempotentes (`onConflictDoNothing` ou `onConflictDoUpdate`) para que possam ser executadas com segurança em deploys/pre-steps sem perda de dados de teste ou produção.
 9. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
@@ -70,7 +71,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 - Priorize a tipagem explícita nos retornos de funções.
 
 ## 6. Documentação e Referências
-- **Diagrama ER (DER):** O modelo relacional oficial do banco de dados (tabelas, colunas, enums e relacionamentos) está documentado em `docs/diagrams/der-mapeia-focos.md`.
+- **Diagrama ER (DER):** O modelo relacional oficial do banco de dados (tabelas, colunas, enums e relacionamentos) está documentado em `docs/diagrams/der-mapeia-focos.md`. **Sempre que o banco for alterado, o DER deve ser atualizado obrigatoriamente.**
 
 ## 7. Controle de Versão (Git)
 - **Não faça commits sem que seja explicitamente solicitado pelo usuário.** Mantenha as modificações na árvore de trabalho (working tree) prontas para revisão e aguarde a autorização antes de criar qualquer commit.

@@ -32,8 +32,14 @@ erDiagram
 
     OCCURRENCE["OCCURRENCE (Ocorrência)"] {
         uuid id PK
+        string protocol UK
         string description
+        string address
+        string situation_type
+        decimal latitude
+        decimal longitude
         uuid status_id FK
+        enum priority "low | medium | high"
         boolean is_active
         uuid user_id FK
         uuid location_id FK
@@ -160,6 +166,8 @@ erDiagram
 |---|---|
 | Perfis de usuário | Tabela `ROLE` relacional com `name` único (`citizen`, `agent`, `manager`), vinculada à tabela `USER` via `role_id` |
 | Status de ocorrência | Tabela `OCCURRENCE_STATUS` relacional com `key` única em inglês (`registered`, `under_review`, `rejected`, `accepted`, `forwarded_for_inspection`, `resolved`) e `name` descritivo |
+| Prioridade de ocorrência | Coluna `priority` na tabela `OCCURRENCE` com tipo ENUM nativo (`low`, `medium`, `high`), preenchida pelo gestor após a validação da ocorrência |
+| Código de protocolo | Coluna `protocol` única (`varchar(5)`) gerada exclusivamente pelo backend para consulta pública sem autenticação |
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade/tabela `STATUS_HISTORY` para auditoria de mudanças com chave primária composta `(occurrence_id, changed_at)`, vinculando `previous_status_id` e `new_status_id` a `OCCURRENCE_STATUS` |
