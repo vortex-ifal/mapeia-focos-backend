@@ -1,5 +1,6 @@
 import { MediaEntity } from '../media';
 import { OccurrenceStatusEntity } from '../occurrence-status';
+import { OccurrencePriority } from './occurrence-priority.enum';
 import { OccurrenceProps } from './occurrence.props';
 
 export class OccurrenceEntity {
@@ -11,6 +12,7 @@ export class OccurrenceEntity {
   private readonly _latitude: number | null;
   private readonly _longitude: number | null;
   private _status?: OccurrenceStatusEntity;
+  private _priority?: OccurrencePriority | null;
   private _userId: string;
   private _media?: MediaEntity[];
   private readonly _createdAt?: Date;
@@ -25,6 +27,7 @@ export class OccurrenceEntity {
     this._latitude = props.latitude ?? null;
     this._longitude = props.longitude ?? null;
     this._status = props.status;
+    this._priority = props.priority ?? null;
     this._userId = props.userId;
     this._media = props.media ?? [];
     this._createdAt = props.createdAt;
@@ -69,6 +72,14 @@ export class OccurrenceEntity {
 
   set status(status: OccurrenceStatusEntity | undefined) {
     this._status = status;
+  }
+
+  get priority(): OccurrencePriority | null | undefined {
+    return this._priority;
+  }
+
+  set priority(priority: OccurrencePriority | null | undefined) {
+    this._priority = priority;
   }
 
   get userId(): string {

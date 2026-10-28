@@ -29,6 +29,7 @@ import {
   ProtocolParamDto,
   TerritorialContextQueryDto,
   TerritorialContextResponseDto,
+  UpdateOccurrencePriorityDto,
   UpdateOccurrenceStatusDto,
   UuidParamDto,
 } from '../dtos';
@@ -230,5 +231,37 @@ export class OccurrencesController {
       dto.statusKey,
       DEV_USERS.MANAGER_ID,
     );
+  }
+
+  @Patch(':id/priority')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Definir prioridade de uma ocorrência',
+    description:
+      'Atualiza o nível de prioridade (low, medium, high) de uma ocorrência que já se encontra validada (status accepted).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Prioridade da ocorrência atualizada com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros ou corpo da requisição inválidos (ex.: ID não é um UUID ou valor de prioridade inválido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'A prioridade só pode ser definida para ocorrências com status validado (accepted).',
+  })
+  async updatePriority(
+    @Param() params: UuidParamDto,
+    @Body() dto: UpdateOccurrencePriorityDto,
+  ): Promise<void> {
+    await this.occurrenceService.updatePriority(params.id, dto.priority);
   }
 }

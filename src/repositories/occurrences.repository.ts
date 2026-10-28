@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, between, count, eq, lte, ne, sql } from 'drizzle-orm';
 import {
   OccurrenceEntity,
+  OccurrencePriority,
   OccurrenceStatusKey,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
@@ -145,6 +146,24 @@ export class OccurrencesRepository {
 
       return true;
     });
+  }
+
+  async updatePriority(
+    id: string,
+    priority: OccurrencePriority,
+  ): Promise<boolean> {
+    const [updated] = await this.db
+      .update(occurrencesTable)
+      .set({
+        priority,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+      )
+      .returning({ id: occurrencesTable.id });
+
+    return Boolean(updated);
   }
 
   async softDelete(id: string): Promise<boolean> {

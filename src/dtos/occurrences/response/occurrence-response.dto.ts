@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { OccurrencePriority } from '../../../entities';
 import { OccurrenceStatusResponseDto } from './occurrence-status-response.dto';
 
 export class OccurrenceResponseDto {
@@ -64,4 +65,12 @@ export class OccurrenceResponseDto {
     type: OccurrenceStatusResponseDto,
   })
   status: OccurrenceStatusResponseDto;
+
+  @ApiProperty({
+    description: 'Nível de prioridade da ocorrência',
+    enum: OccurrencePriority,
+    nullable: true,
+    example: OccurrencePriority.HIGH,
+  })
+  priority: OccurrencePriority | null;
 }

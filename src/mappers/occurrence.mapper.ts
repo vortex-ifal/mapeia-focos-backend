@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   OccurrenceBuilder,
   OccurrenceEntity,
+  OccurrencePriority,
   OccurrenceStatusEntity,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
@@ -107,6 +108,7 @@ export class OccurrenceMapper {
       latitude: entity.latitude,
       longitude: entity.longitude,
       statusId,
+      priority: entity.priority ?? null,
       userId: entity.userId,
     };
   }
@@ -126,6 +128,7 @@ export class OccurrenceMapper {
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
+      .withPriority(row.priority as OccurrencePriority | null)
       .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
@@ -199,6 +202,7 @@ export class OccurrenceMapper {
       createdAt: baseDto.createdAt,
       updatedAt: baseDto.updatedAt,
       status: baseDto.status,
+      priority: baseDto.priority,
       media: entity.media.map((item) => this.mediaMapper.toResponseDto(item)),
     };
   }
@@ -218,6 +222,7 @@ export class OccurrenceMapper {
         key: entity.status?.key ?? '',
         name: entity.status?.name ?? '',
       },
+      priority: entity.priority ?? null,
     };
   }
 
