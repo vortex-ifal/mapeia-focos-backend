@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import {
   OccurrenceBuilder,
   OccurrenceEntity,
+  OccurrencePriority,
   OccurrenceStatusEntity,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
-  type OccurrenceDetailsReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -21,14 +21,17 @@ import {
   TerritorialContextResponseDto,
 } from '../dtos';
 import {
+  MediaSelect,
   OccurrenceInsert,
   OccurrenceSelect,
   OccurrenceStatusSelect,
 } from '../infra';
 import { OccurrenceStatusMapper } from './occurrence-status.mapper';
+import { MediaMapper } from './media.mapper';
 
 export type OccurrenceSelectWithStatus = OccurrenceSelect & {
   status?: OccurrenceStatusSelect | null;
+  media?: MediaSelect[] | null;
 };
 
 export interface NearbyOccurrenceRow {
@@ -45,6 +48,7 @@ export interface NearbyOccurrenceRow {
 export class OccurrenceMapper {
   constructor(
     private readonly occurrenceStatusMapper: OccurrenceStatusMapper,
+    private readonly mediaMapper: MediaMapper,
   ) {}
 
   toDomainFromDto(dto: CreateOccurrenceDto, userId: string): OccurrenceEntity {
@@ -104,6 +108,7 @@ export class OccurrenceMapper {
       latitude: entity.latitude,
       longitude: entity.longitude,
       statusId,
+      priority: entity.priority ?? null,
       userId: entity.userId,
     };
   }
@@ -123,12 +128,19 @@ export class OccurrenceMapper {
       .withDescription(row.description)
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
+      .withPriority(row.priority as OccurrencePriority | null)
       .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
 
     if (statusEntity) {
       builder.withStatus(statusEntity);
+    }
+
+    if (row.media && row.media.length > 0) {
+      builder.withMedia(
+        row.media.map((m) => this.mediaMapper.toDomainFromPersistence(m)),
+      );
     }
 
     return builder.build();
@@ -177,30 +189,21 @@ export class OccurrenceMapper {
     };
   }
 
-  toDetailsDto(
-    readModel: OccurrenceDetailsReadModel,
-  ): OccurrenceDetailResponseDto {
+  toDetailsDto(entity: OccurrenceEntity): OccurrenceDetailResponseDto {
+    const baseDto = this.toDto(entity);
     return {
-      id: readModel.id,
-      protocol: readModel.protocol,
-      address: readModel.address,
-      description: readModel.description,
-      situationType: readModel.situationType,
-      latitude: readModel.latitude,
-      longitude: readModel.longitude,
-      status: {
-        key: readModel.status.key,
-        name: readModel.status.name,
-      },
-      createdAt: readModel.createdAt,
-      updatedAt: readModel.updatedAt,
-      media: readModel.media.map((item) => ({
-        id: item.id,
-        mimeType: item.mimeType,
-        fileSizeBytes: item.fileSizeBytes,
-        type: item.type,
-        uploadedAt: item.uploadedAt,
-      })),
+      id: baseDto.id,
+      protocol: baseDto.protocol,
+      address: baseDto.address,
+      description: baseDto.description,
+      situationType: baseDto.situationType,
+      latitude: baseDto.latitude,
+      longitude: baseDto.longitude,
+      createdAt: baseDto.createdAt,
+      updatedAt: baseDto.updatedAt,
+      status: baseDto.status,
+      priority: baseDto.priority,
+      media: entity.media.map((item) => this.mediaMapper.toResponseDto(item)),
     };
   }
 
@@ -219,6 +222,7 @@ export class OccurrenceMapper {
         key: entity.status?.key ?? '',
         name: entity.status?.name ?? '',
       },
+      priority: entity.priority ?? null,
     };
   }
 

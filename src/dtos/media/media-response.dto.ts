@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class OccurrenceMediaResponseDto {
+export class MediaResponseDto {
   @ApiProperty({
     description: 'Identificador único da mídia',
     example: '6d24ec3d-e8c8-41cf-8878-50578cb8429d',

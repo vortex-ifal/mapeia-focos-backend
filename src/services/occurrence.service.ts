@@ -9,10 +9,10 @@ import {
 import {
   createPaginationReadModel,
   OccurrenceEntity,
+  OccurrencePriority,
   OccurrenceStatusKey,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
-  type OccurrenceDetailsReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -77,12 +77,12 @@ export class OccurrenceService {
     return this.occurrencesRepository.findById(id);
   }
 
-  async findDetailsById(id: string): Promise<OccurrenceDetailsReadModel> {
-    const details = await this.occurrencesRepository.findDetailsById(id);
-    if (!details) {
+  async findDetailsById(id: string): Promise<OccurrenceEntity> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
-    return details;
+    return occurrence;
   }
 
   async updateStatus(
@@ -126,6 +126,33 @@ export class OccurrenceService {
     if (!updated) {
       throw new InternalServerErrorException(
         'Falha ao atualizar o status da ocorrência',
+      );
+    }
+  }
+
+  async updatePriority(
+    id: string,
+    priority: OccurrencePriority,
+  ): Promise<void> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (occurrence.status?.key !== OccurrenceStatusKey.ACCEPTED) {
+      throw new ConflictException(
+        'A prioridade só pode ser definida para ocorrências com status validado (accepted)',
+      );
+    }
+
+    const updated = await this.occurrencesRepository.updatePriority(
+      id,
+      priority,
+    );
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Falha ao atualizar a prioridade da ocorrência',
       );
     }
   }

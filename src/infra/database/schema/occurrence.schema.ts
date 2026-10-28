@@ -8,10 +8,17 @@ import {
   timestamp,
   numeric,
   check,
-  index, // 1. Adicionado o import do index
+  index,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
 import { occurrenceStatusesTable } from './occurrence-status.schema';
 import { usersTable } from './user.schema';
+
+export const occurrencePriorityEnum = pgEnum('occurrence_priority', [
+  'low',
+  'medium',
+  'high',
+]);
 
 export const occurrencesTable = pgTable(
   'occurrences',
@@ -28,6 +35,7 @@ export const occurrencesTable = pgTable(
     statusId: uuid('status_id')
       .references(() => occurrenceStatusesTable.id)
       .notNull(),
+    priority: occurrencePriorityEnum('priority'),
     isActive: boolean('is_active').default(true).notNull(),
     userId: uuid('user_id')
       .references(() => usersTable.id, {

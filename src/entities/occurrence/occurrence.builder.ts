@@ -1,4 +1,6 @@
+import { MediaEntity } from '../media';
 import { OccurrenceStatusEntity } from '../occurrence-status';
+import { OccurrencePriority } from './occurrence-priority.enum';
 import { OccurrenceEntity } from './occurrence.entity';
 import { OccurrenceProps } from './occurrence.props';
 
@@ -52,6 +54,16 @@ export class OccurrenceBuilder {
 
   withStatus(status: OccurrenceStatusEntity): this {
     this.props.status = status;
+    return this;
+  }
+
+  withPriority(priority?: OccurrencePriority | null): this {
+    this.props.priority = priority;
+    return this;
+  }
+
+  withMedia(media?: MediaEntity[]): this {
+    this.props.media = media;
     return this;
   }
 
