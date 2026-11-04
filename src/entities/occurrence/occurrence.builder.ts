@@ -72,6 +72,11 @@ export class OccurrenceBuilder {
     return this;
   }
 
+  withAgentId(agent_id?: string | null): this {
+    this.props.agent_id = agent_id;
+    return this;
+  }
+
   withCreatedAt(createdAt: Date): this {
     this.props.createdAt = createdAt;
     return this;

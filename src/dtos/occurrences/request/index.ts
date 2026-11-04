@@ -4,3 +4,4 @@ export * from './update-occurrence-status.dto';
 export * from './update-occurrence-priority.dto';
 export * from './find-all-occurrences-query.dto';
 export * from './territorial-context-query.dto';
+export * from './dispatch-occurrence.dto';

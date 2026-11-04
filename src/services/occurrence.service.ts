@@ -23,6 +23,8 @@ import {
 } from '../repositories';
 import { TERRITORIAL_DEFAULT_LIMIT } from '../constants';
 
+const AGENT_ROLE_NAME = 'agent';
+
 @Injectable()
 export class OccurrenceService {
   constructor(
@@ -31,19 +33,16 @@ export class OccurrenceService {
     private readonly usersRepository: UsersRepository,
   ) {}
 
-  async create(
-    entity: OccurrenceEntity,
-  ): Promise<OccurrenceCreatedReadModel> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const user = await this.usersRepository.findById(entity.userId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado no sistema');
     }
 
     if (!entity.status) {
-      const defaultStatus =
-        await this.occurrenceStatusesRepository.findByKey(
-          OccurrenceStatusKey.REGISTERED,
-        );
+      const defaultStatus = await this.occurrenceStatusesRepository.findByKey(
+        OccurrenceStatusKey.REGISTERED,
+      );
       if (!defaultStatus) {
         throw new InternalServerErrorException(
           'Status padrão "registered" não encontrado no sistema',
@@ -155,6 +154,72 @@ export class OccurrenceService {
         'Falha ao atualizar a prioridade da ocorrência',
       );
     }
+  }
+//38
+  async dispatch(
+    id: string,
+    agentId: string,
+    dispatchedByUserId: string,
+  ): Promise<OccurrenceEntity> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (occurrence.status?.key !== OccurrenceStatusKey.ACCEPTED) {
+      throw new ConflictException(
+        'Apenas ocorrências com status validado (accepted) podem ser despachadas',
+      );
+    }
+
+    const previousStatusId = occurrence.status?.id;
+    if (!previousStatusId) {
+      throw new InternalServerErrorException(
+        'Status atual da ocorrência não identificado no sistema',
+      );
+    }
+
+    const agent = await this.usersRepository.findById(agentId);
+    if (!agent) {
+      throw new NotFoundException('Agente não encontrado no sistema');
+    }
+
+    if (agent.role?.name !== AGENT_ROLE_NAME || !agent.isActive) {
+      throw new UnprocessableEntityException(
+        'O usuário informado não é um agente ativo',
+      );
+    }
+
+    const dispatchedStatus = await this.occurrenceStatusesRepository.findByKey(
+      OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+    );
+    if (!dispatchedStatus?.id) {
+      throw new InternalServerErrorException(
+        'Status "forwarded_for_inspection" não encontrado no sistema',
+      );
+    }
+
+    const updated = await this.occurrencesRepository.dispatchToAgent(
+      id,
+      agentId,
+      previousStatusId,
+      dispatchedStatus.id,
+      dispatchedByUserId,
+    );
+    if (!updated) {
+      throw new ConflictException(
+        'A ocorrência foi alterada por outra operação e não pôde ser despachada',
+      );
+    }
+
+    const dispatched = await this.occurrencesRepository.findById(id);
+    if (!dispatched) {
+      throw new InternalServerErrorException(
+        'Falha ao recuperar a ocorrência despachada',
+      );
+    }
+
+    return dispatched;
   }
 
   async softDelete(id: string): Promise<boolean> {

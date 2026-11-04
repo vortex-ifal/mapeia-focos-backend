@@ -14,6 +14,7 @@ export class OccurrenceEntity {
   private _status?: OccurrenceStatusEntity;
   private _priority?: OccurrencePriority | null;
   private _userId: string;
+  private _agentId: string | null;//T38
   private _media?: MediaEntity[];
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
@@ -29,6 +30,7 @@ export class OccurrenceEntity {
     this._status = props.status;
     this._priority = props.priority ?? null;
     this._userId = props.userId;
+    this._agentId = props.agent_id ?? null;//T38
     this._media = props.media ?? [];
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
@@ -88,6 +90,14 @@ export class OccurrenceEntity {
 
   set userId(userId: string) {
     this._userId = userId;
+  }
+
+  get agent_id(): string | null {//T38
+    return this._agentId;
+  }
+
+  set agent_id(agent_id: string | null) {//T38
+    this._agentId = agent_id;
   }
 
   get media(): MediaEntity[] {

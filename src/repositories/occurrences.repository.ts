@@ -26,9 +26,7 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(
-    entity: OccurrenceEntity,
-  ): Promise<OccurrenceCreatedReadModel> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
@@ -117,7 +115,6 @@ export class OccurrencesRepository {
     newStatusId: string,
     changedByUserId: string,
   ): Promise<boolean> {
-
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(occurrencesTable)
@@ -129,6 +126,45 @@ export class OccurrencesRepository {
           and(
             eq(occurrencesTable.id, occurrenceId),
             eq(occurrencesTable.isActive, true),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx.insert(statusHistoriesTable).values({
+        occurrenceId,
+        previousStatusId,
+        newStatusId,
+        changedByUserId,
+      });
+
+      return true;
+    });
+  }
+
+  async dispatchToAgent(//T38
+    occurrenceId: string,
+    agentId: string,
+    previousStatusId: string,
+    newStatusId: string,
+    changedByUserId: string,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({
+          agentId,
+          statusId: newStatusId,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(occurrencesTable.id, occurrenceId),
+            eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, previousStatusId),
           ),
         )
         .returning({ id: occurrencesTable.id });
@@ -241,8 +277,7 @@ export class OccurrencesRepository {
     const metersPerDegree = 111_320;
     const deltaLat = radiusMeters / metersPerDegree;
     const deltaLng =
-      radiusMeters /
-      (metersPerDegree * Math.cos((latitude * Math.PI) / 180));
+      radiusMeters / (metersPerDegree * Math.cos((latitude * Math.PI) / 180));
 
     // Pré-calcula os limites da caixa delimitadora para evitar erros de parser do TS no between
     const minLat = latitude - deltaLat;
@@ -257,7 +292,7 @@ export class OccurrencesRepository {
 
     const distance = sql<number>`6371000 * acos(least(1.0, greatest(-1.0,
       cos(radians(${originLat})) * cos(radians(${lat})) * cos(radians(${lng}) - radians(${originLng}))
-      + sin(radians(${originLat})) * sin(radians(${lat}))
+    + sin(radians(${originLat})) * sin(radians(${lat}))
     )))`;
 
     const rows = await this.db
