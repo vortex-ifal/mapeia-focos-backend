@@ -13,6 +13,7 @@ export interface OccurrenceProps {
   status?: OccurrenceStatusEntity;
   priority?: OccurrencePriority | null;
   userId: string;
+  agentId?: string | null; //T38
   media?: MediaEntity[];
   createdAt?: Date;
   updatedAt?: Date;

@@ -13,6 +13,7 @@ import {
   CreatedResponseDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
+  DispatchOccurrenceResponseDto, //T38
   NearbyOccurrenceDto,
   OccurrenceDetailResponseDto,
   OccurrenceProtocolStatusResponseDto,
@@ -110,6 +111,7 @@ export class OccurrenceMapper {
       statusId,
       priority: entity.priority ?? null,
       userId: entity.userId,
+      agentId: entity.agentId, //T38
     };
   }
 
@@ -130,6 +132,7 @@ export class OccurrenceMapper {
       .withCoordinates(row.latitude, row.longitude)
       .withPriority(row.priority as OccurrencePriority | null)
       .withUserId(row.userId)
+      .withAgentId(row.agentId) //T38
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
 
@@ -186,6 +189,19 @@ export class OccurrenceMapper {
       radiusMeters,
       total: readModels.length,
       items: readModels.map((item) => this.toNearbyDto(item)),
+    };
+  }
+  //T38
+  toDispatchResponseDto(
+    entity: OccurrenceEntity,
+  ): DispatchOccurrenceResponseDto {
+    return {
+      id: entity.id ?? '',
+      agentId: entity.agentId ?? '',
+      status: {
+        key: entity.status?.key ?? '',
+        name: entity.status?.name ?? '',
+      },
     };
   }
 

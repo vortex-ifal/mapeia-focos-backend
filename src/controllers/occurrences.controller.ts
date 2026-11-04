@@ -21,6 +21,8 @@ import { DEV_USERS } from '../constants';
 import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
+  DispatchOccurrenceDto, //T38
+  DispatchOccurrenceResponseDto, //T38
   FindAllOccurrencesQueryDto,
   OccurrenceDetailResponseDto,
   OccurrenceProtocolStatusResponseDto,
@@ -263,5 +265,45 @@ export class OccurrencesController {
     @Body() dto: UpdateOccurrencePriorityDto,
   ): Promise<void> {
     await this.occurrenceService.updatePriority(params.id, dto.priority);
+  }
+  //T38
+  @Patch(':id/dispatch')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Despachar ocorrência para um agente',
+    description:
+      'Associa uma ocorrência validada (accepted) a um agente e altera o status para forwarded_for_inspection.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ocorrência despachada com sucesso.',
+    type: DispatchOccurrenceResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'ID da ocorrência ou agentId inválidos (devem ser UUID).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência ou agente não encontrados.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'A ocorrência não está com status validado (accepted).',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'O usuário informado não é um agente ativo.',
+  })
+  async dispatch(
+    @Param() params: UuidParamDto,
+    @Body() dto: DispatchOccurrenceDto,
+  ): Promise<DispatchOccurrenceResponseDto> {
+    const entity = await this.occurrenceService.dispatch(
+      params.id,
+      dto.agent_id,
+      DEV_USERS.MANAGER_ID,
+    );
+    return this.occurrenceMapper.toDispatchResponseDto(entity);
   }
 }
