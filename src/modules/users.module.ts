@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UsersController } from '../controllers';
 import { CryptoModule } from '../infra';
-import { RoleMapper, UserMapper } from '../mappers';
+import {
+  AgentAvailabilityMapper,
+  RoleMapper,
+  UserMapper,
+} from '../mappers';
 import { RolesRepository, UsersRepository } from '../repositories';
 import { UserService } from '../services';
 
@@ -14,6 +18,7 @@ import { UserService } from '../services';
     RolesRepository,
     UserMapper,
     RoleMapper,
+    AgentAvailabilityMapper,
   ],
   exports: [
     UserService,

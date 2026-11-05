@@ -4,6 +4,7 @@ import * as schema from '../../src/infra/database/schema';
 import { rolesTable, usersTable } from '../../src/infra/database/schema';
 
 export async function seedUsers(db: PostgresJsDatabase<typeof schema>): Promise<void> {
+  const municipality = process.env.MUNICIPALITY_NAME?.trim() || null;
   const roles = await db.select().from(rolesTable);
   const rolesByName = new Map(roles.map((r) => [r.name, r.id]));
 
@@ -26,6 +27,8 @@ export async function seedUsers(db: PostgresJsDatabase<typeof schema>): Promise<
       roleId: citizenRoleId,
       isActive: true,
       passwordHash: defaultPasswordHash,
+      sectorRegion: null,
+      municipality: null,
     },
     {
       id: '01a1427d-cf34-7f7d-9662-87d1921be41a',
@@ -35,6 +38,8 @@ export async function seedUsers(db: PostgresJsDatabase<typeof schema>): Promise<
       roleId: agentRoleId,
       isActive: true,
       passwordHash: defaultPasswordHash,
+      sectorRegion: 'Centro',
+      municipality,
     },
     {
       id: '01a1427d-cf37-79cb-8cbf-aaf0a1fdacd6',
@@ -44,13 +49,28 @@ export async function seedUsers(db: PostgresJsDatabase<typeof schema>): Promise<
       roleId: managerRoleId,
       isActive: true,
       passwordHash: defaultPasswordHash,
+      sectorRegion: null,
+      municipality: null,
     },
   ];
 
   for (const user of initialUsers) {
-    await db
-      .insert(usersTable)
-      .values(user)
-      .onConflictDoNothing({ target: usersTable.id });
+    const insert = db.insert(usersTable).values(user);
+
+    if (
+      user.id === '01a1427d-cf34-7f7d-9662-87d1921be41a' &&
+      municipality
+    ) {
+      await insert.onConflictDoUpdate({
+        target: usersTable.id,
+        set: {
+          sectorRegion: user.sectorRegion,
+          municipality: user.municipality,
+        },
+      });
+      continue;
+    }
+
+    await insert.onConflictDoNothing({ target: usersTable.id });
   }
 }
