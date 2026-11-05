@@ -14,6 +14,8 @@ export const usersTable = pgTable('users', {
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  sectorRegion: varchar('sector_region', { length: 100 }),
+  municipality: varchar('municipality', { length: 100 }),
 });
 
 export type UserSelect = typeof usersTable.$inferSelect;
