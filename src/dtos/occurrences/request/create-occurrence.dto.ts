@@ -23,7 +23,8 @@ export class CreateOccurrenceDto {
 
   @ApiProperty({
     description: 'Descrição detalhada do foco ou situação observada',
-    example: 'Pneus e recipientes plásticos acumulando água da chuva no quintal vizinho.',
+    example:
+      'Pneus e recipientes plásticos acumulando água da chuva no quintal vizinho.',
     minLength: 5,
   })
   @IsString({ message: 'A descrição deve ser uma string' })
@@ -38,7 +39,6 @@ export class CreateOccurrenceDto {
   @IsString({ message: 'O tipo da situação deve ser uma string' })
   @IsOptional()
   situationType?: string;
-
 
   // Se um dos dois for enviado, os dois passam a ser obrigatórios
   @ApiPropertyOptional({
@@ -77,4 +77,3 @@ export class CreateOccurrenceDto {
   @Max(180, { message: 'A longitude deve estar entre -180 e 180' })
   longitude?: number;
 }
-

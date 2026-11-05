@@ -1,7 +1,7 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UserEntity } from '../entities';
 import { CryptoService } from '../infra';
@@ -38,7 +38,7 @@ export class UserService {
       }
       role = defaultRole;
     }
-    
+
     const rawPassword = entity.password;
     const passwordHash = await this.cryptoService.hash(rawPassword);
 

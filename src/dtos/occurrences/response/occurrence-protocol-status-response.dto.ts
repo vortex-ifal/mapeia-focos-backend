@@ -3,7 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 export class OccurrenceProtocolStatusResponseDto {
   @ApiProperty({
     example: 'a1b2c',
-    description: 'Código de protocolo alfanumérico único de 5 caracteres em minúsculo',
+    description:
+      'Código de protocolo alfanumérico único de 5 caracteres em minúsculo',
   })
   protocol!: string;
 

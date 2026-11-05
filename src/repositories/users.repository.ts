@@ -1,7 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { UserEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, rolesTable, usersTable } from '../infra';
+import {
+  DRIZZLE_PROVIDER,
+  type DrizzleDB,
+  rolesTable,
+  usersTable,
+} from '../infra';
 import { RoleMapper, UserMapper } from '../mappers';
 
 @Injectable()

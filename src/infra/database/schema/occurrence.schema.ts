@@ -42,6 +42,10 @@ export const occurrencesTable = pgTable(
         onDelete: 'restrict',
       })
       .notNull(),
+    agentId: uuid('agent_id').references(() => usersTable.id, {
+      //T38
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -54,12 +58,12 @@ export const occurrencesTable = pgTable(
       'occurrences_longitude_range',
       sql`${table.longitude} BETWEEN -180 AND 180`,
     ),
-    // 2. Índices adicionados abaixo:
     index('occurrences_status_created_at_idx').on(
       table.statusId,
       table.createdAt,
     ),
     index('occurrences_coordinates_idx').on(table.latitude, table.longitude),
+    index('occurrences_agent_id_idx').on(table.agentId), //T38
   ],
 );
 

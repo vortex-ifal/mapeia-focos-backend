@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SignedUrlResponseDto {
   @ApiProperty({
-    description: 'URL pré-assinada temporária para visualização/download seguro da mídia',
+    description:
+      'URL pré-assinada temporária para visualização/download seguro da mídia',
     example: 'https://r2.exemplo.com/occurrences/...?...',
   })
   signedUrl: string;
@@ -13,4 +14,3 @@ export class SignedUrlResponseDto {
   })
   expiresAt: Date;
 }
-

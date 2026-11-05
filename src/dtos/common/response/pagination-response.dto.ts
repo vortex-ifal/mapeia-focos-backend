@@ -7,7 +7,10 @@ export class PaginationResponseDto<T> {
   @ApiProperty({ description: 'Página atual (base 1)', example: 1 })
   page: number;
 
-  @ApiProperty({ description: 'Quantidade de registros por página', example: 50 })
+  @ApiProperty({
+    description: 'Quantidade de registros por página',
+    example: 50,
+  })
   pageSize: number;
 
   @ApiProperty({ description: 'Total de registros encontrados', example: 120 })

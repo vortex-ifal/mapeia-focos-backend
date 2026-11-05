@@ -4,7 +4,7 @@ import { DRIZZLE_PROVIDER } from './database.constants';
 
 @Global()
 @Module({
-    providers: [databaseProvider],
-    exports: [DRIZZLE_PROVIDER],
+  providers: [databaseProvider],
+  exports: [DRIZZLE_PROVIDER],
 })
-export class DatabaseModule { } 
+export class DatabaseModule {}

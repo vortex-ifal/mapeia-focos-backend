@@ -20,9 +20,7 @@ export const statusHistoriesTable = pgTable(
       .notNull(),
     changedAt: timestamp('changed_at').defaultNow().notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.occurrenceId, table.changedAt] }),
-  ],
+  (table) => [primaryKey({ columns: [table.occurrenceId, table.changedAt] })],
 );
 
 export type StatusHistorySelect = typeof statusHistoriesTable.$inferSelect;

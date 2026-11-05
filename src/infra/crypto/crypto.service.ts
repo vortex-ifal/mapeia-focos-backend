@@ -5,7 +5,10 @@ import * as bcrypt from 'bcrypt';
 export class CryptoService {
   private readonly defaultSaltRounds = 10;
 
-  async hash(plainText: string, saltRounds = this.defaultSaltRounds): Promise<string> {
+  async hash(
+    plainText: string,
+    saltRounds = this.defaultSaltRounds,
+  ): Promise<string> {
     return bcrypt.hash(plainText, saltRounds);
   }
 

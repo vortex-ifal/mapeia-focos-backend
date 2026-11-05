@@ -1,7 +1,17 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, asc, count, eq } from 'drizzle-orm';
 import { MediaEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, mediaTable, occurrencesTable } from '../infra';
+import {
+  DRIZZLE_PROVIDER,
+  type DrizzleDB,
+  mediaTable,
+  occurrencesTable,
+} from '../infra';
 import { MediaMapper } from '../mappers';
 
 @Injectable()
@@ -69,10 +79,7 @@ export class MediaRepository {
 
       // 3. Insere a mídia com segurança
       const data = this.mapper.toPersistence(entity);
-      const [inserted] = await tx
-        .insert(mediaTable)
-        .values(data)
-        .returning();
+      const [inserted] = await tx.insert(mediaTable).values(data).returning();
 
       return this.mapper.toDomainFromPersistence(inserted);
     });

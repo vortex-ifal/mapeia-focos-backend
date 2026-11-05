@@ -29,6 +29,13 @@
       "when": 1793198946692,
       "tag": "20261028144906_add_priority_to_occurrences",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793712540492,
+      "tag": "20261103132900_add_agent_id_to_occurrences",
+      "breakpoints": true
     }
   ]
 }

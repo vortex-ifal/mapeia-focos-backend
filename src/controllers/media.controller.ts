@@ -121,4 +121,3 @@ export class MediaController {
     return this.mediaService.getSignedUrl(mediaId);
   }
 }
-
