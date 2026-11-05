@@ -142,9 +142,36 @@ Para facilitar o desenvolvimento, testes e autenticação local, execute o seed 
 
 ---
 
+## 🔀 Fluxo de Pull Requests e Template
+
+O repositório adota um template padronizado para abertura de Pull Requests, localizado em [`.github/pull_request_template.md`](.github/pull_request_template.md).
+
+### Padrão de Título da PR
+O título da PR deve ser escrito estritamente em **Inglês**, seguindo o formato Conventional Commits com a referência ao card/task correspondente:
+
+```
+<tipo>(<escopo>): <descrição sucinta em inglês> (#TXXX)
+```
+
+**Exemplos:**
+- `feat(occurrences): add priority column and update endpoint (#T034)`
+- `feat(occurrences): add filters and ordering to list occurrences endpoint (#T046)`
+- `refactor(occurrences): embed media in occurrence entity and remove redundant read models`
+
+### Estrutura do Template de PR
+Ao abrir uma PR, preencha as seções obrigatórias:
+1. **📌 Resumo da PR:** Contexto do objetivo de negócio e card relacionado.
+2. **🛠️ Alterações Feitas:** Detalhamento agrupado pelas camadas da Clean Architecture (`Banco/Migrations`, `Domínio/Entidades`, `DTOs/Swagger`, `Mappers/Repositórios`, `Services/Controllers`).
+3. **💡 Decisões Tomadas:** Racional de decisões técnicas (ex.: enums vs tabelas relacionais, filtros de domínio, status HTTP).
+4. **✅ Como Testar:** Passos de execução (`pnpm lint`, `pnpm build`, `pnpm db:migrate`) e exemplos práticos de chamadas HTTP.
+5. **📋 Checklist de Qualidade:** Verificação de regras inegociáveis (código em inglês, documentação/erros em PT-BR, barrel exports `index.ts` em todas as pastas e validação sem erros no linter/build).
+
+---
+
 ## 📚 Documentação do Projeto
 
 Para consultar a modelagem de dados, arquitetura e padrões adotados no projeto, veja os documentos dedicados:
 
 - **[Diagrama Entidade-Relacionamento (DER)](./docs/diagrams/der-mapeia-focos.md)**: Modelagem oficial do banco de dados (tabelas, colunas, enums e relacionamentos).
 - **[Diretrizes e Padrões do Backend (AGENTS.md)](./AGENTS.md)**: Regras de Clean Architecture + MVC, organização de camadas (`controllers`, `services`, `entities`, `mappers`, `repositories`), regras de negócio e barrel exports (`index.ts`).
+- **[Template de Pull Request (.github/pull_request_template.md)](./.github/pull_request_template.md)**: Modelo padrão e obrigatório para descrição, justificativas arquiteturais e checklist de qualidade de PRs.
