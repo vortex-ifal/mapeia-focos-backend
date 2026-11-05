@@ -11,6 +11,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceProtocolStatusReadModel,
@@ -164,12 +165,12 @@ export class OccurrenceService {
   async findAll(
     page: number,
     pageSize: number,
-    statusKey?: OccurrenceStatusKey,
+    filters?: ListOccurrencesFilters,
   ): Promise<PaginationReadModel<OccurrenceEntity>> {
     const { items, total } = await this.occurrencesRepository.findAll(
       page,
       pageSize,
-      statusKey,
+      filters,
     );
     return createPaginationReadModel(items, page, pageSize, total);
   }

@@ -18,6 +18,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
+import { type ListOccurrencesFilters } from '../entities';
 import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
@@ -76,7 +77,7 @@ export class OccurrencesController {
   @ApiOperation({
     summary: 'Listar ocorrências com paginação e filtros',
     description:
-      'Retorna a lista paginada de ocorrências ativas no sistema, permitindo filtrar por chave de status (ex.: registered para a fila de triagem da Central Operacional).',
+      'Retorna a lista paginada de ocorrências ativas no sistema, ordenadas pelas mais recentes. Permite filtrar por chave de status, prioridade e endereço (bairro ou logradouro).',
   })
   @ApiExtraModels(PaginationResponseDto, OccurrenceResponseDto)
   @ApiOkResponse({
@@ -98,15 +99,21 @@ export class OccurrencesController {
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description:
-      'Parâmetros de paginação ou filtro inválidos (ex.: página menor que 1 ou chave de status inexistente).',
+      'Parâmetros de paginação ou filtro inválidos (ex.: página menor que 1, chave de status inexistente ou prioridade inválida).',
   })
   async findAll(
     @Query() query: FindAllOccurrencesQueryDto,
   ): Promise<PaginationResponseDto<OccurrenceResponseDto>> {
+    const filters: ListOccurrencesFilters = {
+      statusKey: query.statusKey,
+      priority: query.priority,
+      address: query.address,
+    };
+
     const paginatedReadModel = await this.occurrenceService.findAll(
       query.page,
       query.pageSize,
-      query.statusKey,
+      filters,
     );
 
     return this.occurrenceMapper.toPaginatedListDto(paginatedReadModel);

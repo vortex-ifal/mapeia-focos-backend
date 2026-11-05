@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, between, count, eq, lte, ne, sql } from 'drizzle-orm';
+import { and, asc, between, count, desc, eq, ilike, lte, ne, sql } from 'drizzle-orm';
 import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceProtocolStatusReadModel,
@@ -184,13 +185,25 @@ export class OccurrencesRepository {
   async findAll(
     page: number,
     pageSize: number,
-    statusKey?: OccurrenceStatusKey,
+    filters?: ListOccurrencesFilters,
   ): Promise<{ items: OccurrenceEntity[]; total: number }> {
     const skip = (page - 1) * pageSize;
 
+    const addressPattern = filters?.address
+      ? `%${filters.address}%`
+      : undefined;
+
     const whereConditions = and(
       eq(occurrencesTable.isActive, true),
-      statusKey ? eq(occurrenceStatusesTable.key, statusKey) : undefined,
+      filters?.statusKey
+        ? eq(occurrenceStatusesTable.key, filters.statusKey)
+        : undefined,
+      filters?.priority
+        ? eq(occurrencesTable.priority, filters.priority)
+        : undefined,
+      addressPattern
+        ? ilike(occurrencesTable.address, addressPattern)
+        : undefined,
     );
 
     const [rows, [countResult]] = await Promise.all([
@@ -205,7 +218,7 @@ export class OccurrencesRepository {
           eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
         )
         .where(whereConditions)
-        .orderBy(asc(occurrencesTable.createdAt), asc(occurrencesTable.id))
+        .orderBy(desc(occurrencesTable.createdAt), asc(occurrencesTable.id))
         .limit(pageSize)
         .offset(skip),
       this.db
