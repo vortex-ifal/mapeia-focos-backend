@@ -31,6 +31,7 @@ async function bootstrap() {
     .addTag('Occurrences', 'Registro e acompanhamento de ocorrências e focos')
     .addTag('Media', 'Upload e recuperação de arquivos de mídia vinculados a ocorrências')
     .addTag('Users', 'Gerenciamento e cadastro de usuários')
+    .addTag('Agent', 'Dashboard e recursos do módulo do agente de endemias')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
