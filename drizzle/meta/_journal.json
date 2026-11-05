@@ -36,6 +36,13 @@
       "when": 1793849080508,
       "tag": "20261105032440_create_assignments_table",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793896510238,
+      "tag": "20261105163510_add_agent_location_fields_and_assignment_index",
+      "breakpoints": true
     }
   ]
 }

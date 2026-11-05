@@ -1,9 +1,10 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { UserEntity } from '../entities';
+import { ConfigService } from '@nestjs/config';
+import { UserEntity, type AgentAvailabilityReadModel } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
 
@@ -13,7 +14,22 @@ export class UserService {
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
     private readonly cryptoService: CryptoService,
+    private readonly configService: ConfigService,
   ) {}
+
+  async findAgentsWithActiveTaskCounts(): Promise<AgentAvailabilityReadModel[]> {
+    const municipality = this.configService
+      .getOrThrow<string>('MUNICIPALITY_NAME')
+      .trim();
+
+    if (!municipality) {
+      throw new InternalServerErrorException(
+        'A variável MUNICIPALITY_NAME deve conter o município atendido pelo sistema',
+      );
+    }
+
+    return this.usersRepository.findAgentsWithActiveTaskCounts(municipality);
+  }
 
   async create(entity: UserEntity): Promise<string> {
     const existingByEmail = await this.usersRepository.findByEmail(
