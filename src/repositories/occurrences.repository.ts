@@ -4,12 +4,14 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  type AgentDashboardReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceProtocolStatusReadModel,
 } from '../entities';
 import {
+  assignmentsTable,
   DRIZZLE_PROVIDER,
   type DrizzleDB,
   mediaTable,
@@ -302,5 +304,78 @@ export class OccurrencesRepository {
       .limit(limit);
 
     return rows.map((row) => this.mapper.toNearbyReadModelFromPersistence(row));
+  }
+
+  async findAgentDashboard(agentId: string): Promise<AgentDashboardReadModel> {
+    const latestAssignments = this.db
+      .selectDistinctOn([assignmentsTable.occurrenceId], {
+        occurrenceId: assignmentsTable.occurrenceId,
+        agentId: assignmentsTable.agentId,
+      })
+      .from(assignmentsTable)
+      .orderBy(
+        assignmentsTable.occurrenceId,
+        desc(assignmentsTable.assignedAt),
+        desc(assignmentsTable.id),
+      )
+      .as('latest_assignments');
+
+    const rows = await this.db
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
+      .from(latestAssignments)
+      .innerJoin(
+        occurrencesTable,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      )
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(latestAssignments.agentId, agentId),
+          eq(occurrencesTable.isActive, true),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.RESOLVED),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
+        ),
+      );
+
+    const entities = rows.map((row) =>
+      this.mapper.toDomainFromPersistence({
+        ...row.occurrence,
+        status: row.status,
+      }),
+    );
+
+    const totalAssigned = entities.length;
+    const totalHighPriority = entities.filter(
+      (e) => e.priority === OccurrencePriority.HIGH,
+    ).length;
+    const totalInspections = entities.filter(
+      (e) => e.status?.key === OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+    ).length;
+
+    const priorityOrder: Record<string, number> = {
+      [OccurrencePriority.HIGH]: 1,
+      [OccurrencePriority.MEDIUM]: 2,
+      [OccurrencePriority.LOW]: 3,
+    };
+
+    const sorted = [...entities].sort((a, b) => {
+      const pa = a.priority ? (priorityOrder[a.priority] ?? 4) : 4;
+      const pb = b.priority ? (priorityOrder[b.priority] ?? 4) : 4;
+      if (pa !== pb) return pa - pb;
+      return (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0);
+    });
+
+    return {
+      totalAssigned,
+      totalHighPriority,
+      totalInspections,
+      nextPriority: sorted[0] ?? null,
+    };
   }
 }

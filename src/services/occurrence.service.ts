@@ -12,6 +12,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  type AgentDashboardReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
@@ -260,6 +261,21 @@ export class OccurrenceService {
       limit,
       id,
     );
+  }
+
+  async getAgentDashboard(agentId: string): Promise<AgentDashboardReadModel> {
+    const agent = await this.usersRepository.findById(agentId);
+    if (!agent) {
+      throw new NotFoundException('Agente não encontrado no sistema');
+    }
+
+    if (agent.role?.name !== 'agent') {
+      throw new ConflictException(
+        'O usuário informado não possui perfil de agente',
+      );
+    }
+
+    return this.occurrencesRepository.findAgentDashboard(agentId);
   }
 
   private async generateUniqueProtocol(): Promise<string> {
