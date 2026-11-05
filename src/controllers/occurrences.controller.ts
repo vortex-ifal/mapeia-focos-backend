@@ -20,6 +20,7 @@ import {
 import { DEV_USERS } from '../constants';
 import { type ListOccurrencesFilters } from '../entities';
 import {
+  AssignOccurrenceDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
@@ -270,5 +271,41 @@ export class OccurrencesController {
     @Body() dto: UpdateOccurrencePriorityDto,
   ): Promise<void> {
     await this.occurrenceService.updatePriority(params.id, dto.priority);
+  }
+
+  @Patch(':id/assign')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Despachar ocorrência para um agente',
+    description:
+      'Associa um agente à ocorrência validada (accepted), atualizando seu status para "forwarded_for_inspection" e registrando o despacho no histórico.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Ocorrência despachada para o agente com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Parâmetros ou corpo da requisição inválidos (ex.: ID não é um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência ou agente não encontrado no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'Apenas ocorrências com status validado (accepted) podem ser despachadas, ou o usuário informado não possui perfil de agente.',
+  })
+  async assign(
+    @Param() params: UuidParamDto,
+    @Body() dto: AssignOccurrenceDto,
+  ): Promise<void> {
+    await this.occurrenceService.assign(
+      params.id,
+      dto.agentId,
+      DEV_USERS.MANAGER_ID,
+    );
   }
 }
