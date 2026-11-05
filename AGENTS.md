@@ -19,7 +19,7 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
 
 2. **`services/`**:
    - Orquestração de casos de uso **centralizados por entidade** (um único service contém todos os métodos da entidade, ex: `occurrence.service.ts`).
-   - **Tipagem estrita:** Services **só podem receber e retornar Entidades ou Read Models** de domínio (nunca recebem nem retornam DTOs ou schemas de persistência diretamente).
+   - **Tipagem estrita:** Services **só podem receber e retornar Entidades, Read Models ou Filtros/Tipos** de domínio (nunca recebem nem retornam DTOs ou schemas de persistência diretamente).
    - **Tratamento de Exceções:** Services **NUNCA** devem lançar `BadRequestException` (conceito de transporte/entrada HTTP). Services lançam:
      - Exceções de negócio/domínio: `ConflictException`, `NotFoundException`, `ForbiddenException`, `UnprocessableEntityException`.
      - Exceções de infraestrutura/sistema: `InternalServerErrorException` (para falhas internas ou inconsistência de dados mestres).
@@ -32,23 +32,28 @@ A estrutura de pastas (`src/`) segue uma organização em primeiro nível rigoro
      - Interfaces TypeScript puras para projeções exclusivas de consulta (ex.: `OccurrenceStatusReadModel`).
      - **Finalidade:** Otimizar performance de queries de leitura (evitando hidratação pesada do agregado completo) e prevenir vazamento de dados sensíveis (*data leakage*).
      - **Regra:** Devem ser exportadas via `index.ts` da subpasta `read-models/` e pelo barrel export da entidade.
-5. **`dtos/`**: Objetos de transferência de dados com validação (`class-validator`) e documentação Swagger (`@ApiProperty`).
+   - **`filters/` (Filtros de Domínio):**
+     - Interfaces TypeScript puras para critérios de busca, listagem e filtros de entidades (ex.: `ListOccurrencesFilters`).
+     - **Finalidade:** Encapsular critérios de consulta em um único objeto de domínio, estabilizar as assinaturas de Services e Repositórios (eliminando múltiplos parâmetros soltos) e impedir que a camada de negócio conheça os DTOs de transporte HTTP.
+     - **Uso no Controller:** O Controller recebe o Query DTO validado e instancia explicitamente o objeto tipado de filtro de domínio antes de passá-lo ao Service (ex.: `const filters: ListOccurrencesFilters = { ... };`).
+     - **Regra:** Devem residir na subpasta `filters/` da entidade e ser exportadas via `index.ts` da subpasta e pelo barrel export da entidade.
+4. **`dtos/`**: Objetos de transferência de dados com validação (`class-validator`) e documentação Swagger (`@ApiProperty`).
    - **Estruturação Obrigatória (`request/` e `response/`):** Em cada módulo ou subpasta de entidade (ex.: `dtos/occurrences/`, `dtos/common/`), os DTOs **DEVEM ser estritamente separados** em duas subpastas:
      - `request/`: Contém DTOs de entrada enviados pelo cliente HTTP (payloads de `@Body()`, `@Query()` e `@Param()`, como parâmetros de rota, filtros e comandos de criação/atualização).
      - `response/`: Contém DTOs de saída retornados pela API (payloads serializados das respostas HTTP).
    - **DTOs Genéricos / Compartilhados:** Parâmetros ou respostas comuns a várias entidades (ex.: `uuid-param.dto.ts`, `created-response.dto.ts`) devem residir em `dtos/common/request/` e `dtos/common/response/`.
    - **Regra de Barrels:** Tanto `request/` quanto `response/` devem conter seus próprios arquivos `index.ts`, e a raiz da subpasta da entidade deve re-exportá-los através do seu `index.ts`.
-6. **`mappers/`**: Transformação bidirecional de dados. Toda conversão passa por eles:
+5. **`mappers/`**: Transformação bidirecional de dados. Toda conversão passa por eles:
    - `toDomainFromDto()`: DTO -> Entity
    - `toDto()`: Entity / Read Model -> DTO
    - `toPersistence()`: Entity -> Drizzle Schema Insert
    - `toDomainFromPersistence()`: Drizzle Schema Select -> Entity
-7. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
-8. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
+6. **`repositories/`**: Isolamento das queries SQL usando Drizzle ORM.
+7. **`infra/database/schema/`**: Onde os schemas do Drizzle (Tabelas do Postgres) são declarados. Consulte sempre o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` como referência oficial da modelagem.
    - **Atualização Obrigatória do DER:** Sempre que o banco de dados for alterado (criação/remoção de tabelas, adição/alteração de colunas, novos enums SQL, constraints ou relacionamentos), o Diagrama ER em `docs/diagrams/der-mapeia-focos.md` **DEVE ser obrigatoriamente atualizado** para manter o modelo visual rigorosamente sincronizado com a persistência.
    - **Boas Práticas de Migrations:** Ao gerar novas migrações, **sempre utilize a flag `--name`** com um nome descritivo em `snake_case` (ex: `pnpm db:generate --name create_occurrences_table` ou `pnpm db:generate --name add_status_to_occurrences`). Garanta migrações atômicas e revise os arquivos SQL em `drizzle/`.
    - **Idempotência de Seeds (Sem TRUNCATE):** A implementação de seeds **NUNCA deve utilizar `TRUNCATE`** ou apagar dados existentes das tabelas. Utilize sempre operações de Upsert idempotentes (`onConflictDoNothing` ou `onConflictDoUpdate`) para que possam ser executadas com segurança em deploys/pre-steps sem perda de dados de teste ou produção.
-9. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
+8. **`modules/`**: Módulos do NestJS para agrupar Controllers, Services e Repositories (Injeção de Dependências). O `app.module.ts` deve importar os módulos dessa pasta.
 
 ## 3. Regra Mandatória: Barrel Exports (`index.ts`)
 - **Toda pasta e subpasta do projeto DEVE ter um `index.ts`.**
