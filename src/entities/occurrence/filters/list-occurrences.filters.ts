@@ -5,4 +5,5 @@ export interface ListOccurrencesFilters {
   statusKey?: OccurrenceStatusKey;
   priority?: OccurrencePriority;
   address?: string;
+  agentId?: string;
 }

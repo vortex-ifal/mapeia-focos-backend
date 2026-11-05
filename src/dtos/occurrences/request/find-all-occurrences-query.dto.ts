@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 import { PaginationQueryDto } from '../../common';
 import { OccurrencePriority, OccurrenceStatusKey } from '../../../entities';
 
@@ -38,4 +44,13 @@ export class FindAllOccurrencesQueryDto extends PaginationQueryDto {
   @IsString({ message: 'O endereço deve ser um texto válido' })
   @MaxLength(100, { message: 'O endereço deve ter no máximo 100 caracteres' })
   address?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filtrar ocorrências atribuídas a um agente específico (UUID do agente)',
+    example: '01a1427d-cf34-7f7d-9662-87d1921be41a',
+  })
+  @IsOptional()
+  @IsUUID('all', { message: 'O ID do agente deve ser um UUID válido' })
+  agentId?: string;
 }

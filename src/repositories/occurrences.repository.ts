@@ -1,5 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, between, count, desc, eq, ilike, lte, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  between,
+  count,
+  desc,
+  eq,
+  ilike,
+  lte,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import {
   OccurrenceEntity,
   OccurrencePriority,
@@ -29,9 +40,7 @@ export class OccurrencesRepository {
     private readonly mapper: OccurrenceMapper,
   ) {}
 
-  async create(
-    entity: OccurrenceEntity,
-  ): Promise<OccurrenceCreatedReadModel> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const data = this.mapper.toPersistence(entity);
 
     const [inserted] = await this.db
@@ -120,7 +129,6 @@ export class OccurrencesRepository {
     newStatusId: string,
     changedByUserId: string,
   ): Promise<boolean> {
-
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(occurrencesTable)
@@ -190,10 +198,13 @@ export class OccurrencesRepository {
     filters?: ListOccurrencesFilters,
   ): Promise<{ items: OccurrenceEntity[]; total: number }> {
     const skip = (page - 1) * pageSize;
-
     const addressPattern = filters?.address
       ? `%${filters.address}%`
       : undefined;
+
+    const latestAssignments = filters?.agentId
+      ? this.getLatestAssignmentsSubquery()
+      : null;
 
     const whereConditions = and(
       eq(occurrencesTable.isActive, true),
@@ -206,42 +217,59 @@ export class OccurrencesRepository {
       addressPattern
         ? ilike(occurrencesTable.address, addressPattern)
         : undefined,
+      latestAssignments && filters?.agentId
+        ? eq(latestAssignments.agentId, filters.agentId)
+        : undefined,
     );
 
+    let rowsQuery = this.db
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .$dynamic();
+
+    let countQuery = this.db
+      .select({ total: count() })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .$dynamic();
+
+    if (latestAssignments) {
+      rowsQuery = rowsQuery.innerJoin(
+        latestAssignments,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      );
+      countQuery = countQuery.innerJoin(
+        latestAssignments,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      );
+    }
+
     const [rows, [countResult]] = await Promise.all([
-      this.db
-        .select({
-          occurrence: occurrencesTable,
-          status: occurrenceStatusesTable,
-        })
-        .from(occurrencesTable)
-        .innerJoin(
-          occurrenceStatusesTable,
-          eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
-        )
+      rowsQuery
         .where(whereConditions)
         .orderBy(desc(occurrencesTable.createdAt), asc(occurrencesTable.id))
         .limit(pageSize)
         .offset(skip),
-      this.db
-        .select({ total: count() })
-        .from(occurrencesTable)
-        .innerJoin(
-          occurrenceStatusesTable,
-          eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
-        )
-        .where(whereConditions),
+      countQuery.where(whereConditions),
     ]);
 
-    const items = rows.map((row) =>
-      this.mapper.toDomainFromPersistence({
-        ...row.occurrence,
-        status: row.status,
-      }),
-    );
-
     return {
-      items,
+      items: rows.map((row) =>
+        this.mapper.toDomainFromPersistence({
+          ...row.occurrence,
+          status: row.status,
+        }),
+      ),
       total: countResult?.total ?? 0,
     };
   }
@@ -256,8 +284,7 @@ export class OccurrencesRepository {
     const metersPerDegree = 111_320;
     const deltaLat = radiusMeters / metersPerDegree;
     const deltaLng =
-      radiusMeters /
-      (metersPerDegree * Math.cos((latitude * Math.PI) / 180));
+      radiusMeters / (metersPerDegree * Math.cos((latitude * Math.PI) / 180));
 
     // Pré-calcula os limites da caixa delimitadora para evitar erros de parser do TS no between
     const minLat = latitude - deltaLat;
@@ -307,18 +334,7 @@ export class OccurrencesRepository {
   }
 
   async findAgentDashboard(agentId: string): Promise<AgentDashboardReadModel> {
-    const latestAssignments = this.db
-      .selectDistinctOn([assignmentsTable.occurrenceId], {
-        occurrenceId: assignmentsTable.occurrenceId,
-        agentId: assignmentsTable.agentId,
-      })
-      .from(assignmentsTable)
-      .orderBy(
-        assignmentsTable.occurrenceId,
-        desc(assignmentsTable.assignedAt),
-        desc(assignmentsTable.id),
-      )
-      .as('latest_assignments');
+    const latestAssignments = this.getLatestAssignmentsSubquery();
 
     const rows = await this.db
       .select({
@@ -377,5 +393,64 @@ export class OccurrencesRepository {
       totalInspections,
       nextPriority: sorted[0] ?? null,
     };
+  }
+
+  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+    const latestAssignments = this.getLatestAssignmentsSubquery();
+
+    const rows = await this.db
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
+      .from(latestAssignments)
+      .innerJoin(
+        occurrencesTable,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      )
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(latestAssignments.agentId, agentId),
+          eq(occurrencesTable.isActive, true),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.RESOLVED),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
+        ),
+      )
+      .orderBy(
+        sql<number>`case ${occurrencesTable.priority}
+          when 'high' then 1
+          when 'medium' then 2
+          when 'low' then 3
+          else 4
+        end`,
+        asc(occurrencesTable.createdAt),
+        asc(occurrencesTable.id),
+      );
+
+    return rows.map((row) =>
+      this.mapper.toDomainFromPersistence({
+        ...row.occurrence,
+        status: row.status,
+      }),
+    );
+  }
+
+  private getLatestAssignmentsSubquery() {
+    return this.db
+      .selectDistinctOn([assignmentsTable.occurrenceId], {
+        occurrenceId: assignmentsTable.occurrenceId,
+        agentId: assignmentsTable.agentId,
+      })
+      .from(assignmentsTable)
+      .orderBy(
+        assignmentsTable.occurrenceId,
+        desc(assignmentsTable.assignedAt),
+        desc(assignmentsTable.id),
+      )
+      .as('latest_assignments');
   }
 }

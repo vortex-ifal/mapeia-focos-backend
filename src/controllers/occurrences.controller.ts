@@ -78,7 +78,7 @@ export class OccurrencesController {
   @ApiOperation({
     summary: 'Listar ocorrências com paginação e filtros',
     description:
-      'Retorna a lista paginada de ocorrências ativas no sistema, ordenadas pelas mais recentes. Permite filtrar por chave de status, prioridade e endereço (bairro ou logradouro).',
+      'Retorna a lista paginada de ocorrências ativas no sistema, ordenadas pelas mais recentes. Permite filtrar por chave de status, prioridade, endereço (bairro ou logradouro) e agente atribuído.',
   })
   @ApiExtraModels(PaginationResponseDto, OccurrenceResponseDto)
   @ApiOkResponse({
@@ -109,6 +109,7 @@ export class OccurrencesController {
       statusKey: query.statusKey,
       priority: query.priority,
       address: query.address,
+      agentId: query.agentId,
     };
 
     const paginatedReadModel = await this.occurrenceService.findAll(

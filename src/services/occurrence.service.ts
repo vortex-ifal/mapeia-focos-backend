@@ -278,6 +278,21 @@ export class OccurrenceService {
     return this.occurrencesRepository.findAgentDashboard(agentId);
   }
 
+  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+    const agent = await this.usersRepository.findById(agentId);
+    if (!agent) {
+      throw new NotFoundException('Agente não encontrado no sistema');
+    }
+
+    if (agent.role?.name !== 'agent') {
+      throw new ConflictException(
+        'O usuário informado não possui perfil de agente',
+      );
+    }
+
+    return this.occurrencesRepository.findAssignedToAgent(agentId);
+  }
+
   private async generateUniqueProtocol(): Promise<string> {
     const maxAttempts = 10;
     for (let attempts = 0; attempts < maxAttempts; attempts++) {
