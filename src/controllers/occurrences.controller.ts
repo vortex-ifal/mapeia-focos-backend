@@ -13,6 +13,7 @@ import {
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
   getSchemaPath,
@@ -21,6 +22,7 @@ import { DEV_USERS } from '../constants';
 import { type ListOccurrencesFilters } from '../entities';
 import {
   AssignOccurrenceDto,
+  AgentIdParamDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
@@ -147,6 +149,41 @@ export class OccurrencesController {
       params.protocol,
     );
     return this.occurrenceMapper.toStatusDto(readModel);
+  }
+
+  @Get('agent/:agentId')
+  @ApiOperation({
+    summary: 'Listar ocorrências atribuídas a um agente',
+    description:
+      'Retorna as ocorrências ativas cuja atribuição mais recente pertence ao agente, ordenadas por prioridade e data.',
+  })
+  @ApiParam({
+    name: 'agentId',
+    description: 'Identificador único (UUID) do agente',
+    example: '01a1427d-cf34-7f7d-9662-87d1921be41a',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de trabalho do agente recuperada com sucesso.',
+    type: [OccurrenceResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'O ID do agente deve ser um UUID válido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'A lista de trabalho está disponível apenas para agentes ativos.',
+  })
+  async findAssignedToAgent(
+    @Param() params: AgentIdParamDto,
+  ): Promise<OccurrenceResponseDto[]> {
+    const occurrences = await this.occurrenceService.findAssignedToAgent(
+      params.agentId,
+    );
+    return occurrences.map((occurrence) =>
+      this.occurrenceMapper.toDto(occurrence),
+    );
   }
 
   @Get(':id/territorial-context')

@@ -1,5 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, between, count, desc, eq, ilike, lte, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  between,
+  count,
+  desc,
+  eq,
+  ilike,
+  lte,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import {
   OccurrenceEntity,
   OccurrencePriority,
@@ -10,6 +21,7 @@ import {
   type OccurrenceProtocolStatusReadModel,
 } from '../entities';
 import {
+  assignmentsTable,
   DRIZZLE_PROVIDER,
   type DrizzleDB,
   mediaTable,
@@ -77,6 +89,61 @@ export class OccurrencesRepository {
       status: row.status,
       media: mediaRows,
     });
+  }
+
+  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+    const latestAssignments = this.db
+      .selectDistinctOn([assignmentsTable.occurrenceId], {
+        occurrenceId: assignmentsTable.occurrenceId,
+        agentId: assignmentsTable.agentId,
+      })
+      .from(assignmentsTable)
+      .orderBy(
+        assignmentsTable.occurrenceId,
+        desc(assignmentsTable.assignedAt),
+        desc(assignmentsTable.id),
+      )
+      .as('latest_assignments');
+
+    const rows = await this.db
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+      })
+      .from(latestAssignments)
+      .innerJoin(
+        occurrencesTable,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      )
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(latestAssignments.agentId, agentId),
+          eq(occurrencesTable.isActive, true),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.RESOLVED),
+          ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
+        ),
+      )
+      .orderBy(
+        sql<number>`case ${occurrencesTable.priority}
+          when 'high' then 1
+          when 'medium' then 2
+          when 'low' then 3
+          else 4
+        end`,
+        asc(occurrencesTable.createdAt),
+        asc(occurrencesTable.id),
+      );
+
+    return rows.map((row) =>
+      this.mapper.toDomainFromPersistence({
+        ...row.occurrence,
+        status: row.status,
+      }),
+    );
   }
 
   async findStatusByProtocol(

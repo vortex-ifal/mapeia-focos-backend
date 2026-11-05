@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -84,6 +85,17 @@ export class OccurrenceService {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
     return occurrence;
+  }
+
+  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+    const agent = await this.usersRepository.findById(agentId);
+    if (!agent || !agent.isActive || agent.role?.name !== 'agent') {
+      throw new ForbiddenException(
+        'A lista de trabalho está disponível apenas para agentes ativos',
+      );
+    }
+
+    return this.occurrencesRepository.findAssignedToAgent(agentId);
   }
 
   async updateStatus(
