@@ -7,6 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import {
+  AssignmentBuilder,
   createPaginationReadModel,
   OccurrenceEntity,
   OccurrencePriority,
@@ -18,6 +19,7 @@ import {
   type PaginationReadModel,
 } from '../entities';
 import {
+  AssignmentsRepository,
   OccurrencesRepository,
   OccurrenceStatusesRepository,
   UsersRepository,
@@ -30,21 +32,19 @@ export class OccurrenceService {
     private readonly occurrencesRepository: OccurrencesRepository,
     private readonly occurrenceStatusesRepository: OccurrenceStatusesRepository,
     private readonly usersRepository: UsersRepository,
+    private readonly assignmentsRepository: AssignmentsRepository,
   ) {}
 
-  async create(
-    entity: OccurrenceEntity,
-  ): Promise<OccurrenceCreatedReadModel> {
+  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
     const user = await this.usersRepository.findById(entity.userId);
     if (!user) {
       throw new NotFoundException('Usuário não encontrado no sistema');
     }
 
     if (!entity.status) {
-      const defaultStatus =
-        await this.occurrenceStatusesRepository.findByKey(
-          OccurrenceStatusKey.REGISTERED,
-        );
+      const defaultStatus = await this.occurrenceStatusesRepository.findByKey(
+        OccurrenceStatusKey.REGISTERED,
+      );
       if (!defaultStatus) {
         throw new InternalServerErrorException(
           'Status padrão "registered" não encontrado no sistema',
@@ -154,6 +154,68 @@ export class OccurrenceService {
     if (!updated) {
       throw new InternalServerErrorException(
         'Falha ao atualizar a prioridade da ocorrência',
+      );
+    }
+  }
+
+  async assign(
+    occurrenceId: string,
+    agentId: string,
+    managerId: string,
+  ): Promise<void> {
+    const occurrence = await this.occurrencesRepository.findById(occurrenceId);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (occurrence.status?.key !== OccurrenceStatusKey.ACCEPTED) {
+      throw new ConflictException(
+        'Apenas ocorrências com status validado (accepted) podem ser despachadas',
+      );
+    }
+
+    const previousStatusId = occurrence.status.id;
+    if (!previousStatusId) {
+      throw new InternalServerErrorException(
+        'Status atual da ocorrência não identificado no sistema',
+      );
+    }
+
+    const agent = await this.usersRepository.findById(agentId);
+    if (!agent) {
+      throw new NotFoundException('Agente não encontrado no sistema');
+    }
+
+    if (agent.role?.name !== 'agent') {
+      throw new ConflictException(
+        'O usuário informado não possui perfil de agente',
+      );
+    }
+
+    const newStatus = await this.occurrenceStatusesRepository.findByKey(
+      OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+    );
+    if (!newStatus?.id) {
+      throw new InternalServerErrorException(
+        'Status "forwarded_for_inspection" não encontrado no sistema',
+      );
+    }
+
+    const assignmentEntity = AssignmentBuilder.create()
+      .withOccurrenceId(occurrenceId)
+      .withAgentId(agentId)
+      .withAssignedByManagerId(managerId)
+      .build();
+
+    const success = await this.assignmentsRepository.createWithStatusUpdate(
+      assignmentEntity,
+      previousStatusId,
+      newStatus.id,
+    );
+
+    if (!success) {
+      throw new InternalServerErrorException(
+        'Falha ao despachar a ocorrência para o agente',
       );
     }
   }
