@@ -7,6 +7,8 @@ import {
   desc,
   eq,
   ilike,
+  inArray,
+  isNotNull,
   lte,
   ne,
   sql,
@@ -16,6 +18,7 @@ import {
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
+  type HeatmapPointReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
@@ -437,6 +440,37 @@ export class OccurrencesRepository {
         status: row.status,
       }),
     );
+  }
+
+  async findHeatmapPoints(): Promise<HeatmapPointReadModel[]> {
+    const rows = await this.db
+      .select({
+        latitude: occurrencesTable.latitude,
+        longitude: occurrencesTable.longitude,
+      })
+      .from(occurrencesTable)
+      .innerJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .where(
+        and(
+          eq(occurrencesTable.isActive, true),
+          isNotNull(occurrencesTable.latitude),
+          isNotNull(occurrencesTable.longitude),
+          inArray(occurrenceStatusesTable.key, [
+            OccurrenceStatusKey.ACCEPTED,
+            OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+          ]),
+        ),
+      );
+
+    return rows
+      .filter((r) => r.latitude !== null && r.longitude !== null)
+      .map((r) => ({
+        latitude: r.latitude as number,
+        longitude: r.longitude as number,
+      }));
   }
 
   private getLatestAssignmentsSubquery() {

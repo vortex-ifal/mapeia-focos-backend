@@ -13,6 +13,7 @@ import {
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
+  type HeatmapPointReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
@@ -291,6 +292,10 @@ export class OccurrenceService {
     }
 
     return this.occurrencesRepository.findAssignedToAgent(agentId);
+  }
+
+  async findHeatmapPoints(): Promise<HeatmapPointReadModel[]> {
+    return this.occurrencesRepository.findHeatmapPoints();
   }
 
   private async generateUniqueProtocol(): Promise<string> {

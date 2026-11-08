@@ -4,6 +4,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusEntity,
+  type HeatmapPointReadModel,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceProtocolStatusReadModel,
@@ -13,6 +14,7 @@ import {
   CreatedResponseDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
+  HeatmapResponseDto,
   NearbyOccurrenceDto,
   OccurrenceDetailResponseDto,
   OccurrenceProtocolStatusResponseDto,
@@ -223,6 +225,16 @@ export class OccurrenceMapper {
         name: entity.status?.name ?? '',
       },
       priority: entity.priority ?? null,
+    };
+  }
+
+  toHeatmapResponseDto(points: HeatmapPointReadModel[]): HeatmapResponseDto {
+    return {
+      total: points.length,
+      points: points.map((p) => ({
+        latitude: p.latitude,
+        longitude: p.longitude,
+      })),
     };
   }
 

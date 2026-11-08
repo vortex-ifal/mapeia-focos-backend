@@ -24,6 +24,7 @@ import {
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
+  HeatmapResponseDto,
   OccurrenceDetailResponseDto,
   OccurrenceProtocolStatusResponseDto,
   OccurrenceResponseDto,
@@ -148,6 +149,22 @@ export class OccurrencesController {
       params.protocol,
     );
     return this.occurrenceMapper.toStatusDto(readModel);
+  }
+
+  @Get('heatmap')
+  @ApiOperation({
+    summary: 'Coordenadas para mapa de calor de risco',
+    description:
+      'Retorna todas as coordenadas de ocorrências confirmadas e ativas (status accepted ou forwarded_for_inspection) '
+      + 'com localização disponível para renderização da camada de calor no painel do gestor.',
+  })
+  @ApiOkResponse({
+    description: 'Pontos do heatmap retornados com sucesso.',
+    type: HeatmapResponseDto,
+  })
+  async getHeatmap(): Promise<HeatmapResponseDto> {
+    const points = await this.occurrenceService.findHeatmapPoints();
+    return this.occurrenceMapper.toHeatmapResponseDto(points);
   }
 
   @Get(':id/territorial-context')
