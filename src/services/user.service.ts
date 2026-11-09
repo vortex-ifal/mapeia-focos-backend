@@ -1,9 +1,9 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { UserEntity } from '../entities';
+import { UserEntity, type AgentAvailabilityReadModel } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
 
@@ -14,6 +14,12 @@ export class UserService {
     private readonly rolesRepository: RolesRepository,
     private readonly cryptoService: CryptoService,
   ) {}
+
+  async findAgentsWithActiveTaskCounts(): Promise<
+    AgentAvailabilityReadModel[]
+  > {
+    return this.usersRepository.findAgentsWithActiveTaskCounts();
+  }
 
   async create(entity: UserEntity): Promise<string> {
     const existingByEmail = await this.usersRepository.findByEmail(
@@ -38,7 +44,7 @@ export class UserService {
       }
       role = defaultRole;
     }
-    
+
     const rawPassword = entity.password;
     const passwordHash = await this.cryptoService.hash(rawPassword);
 

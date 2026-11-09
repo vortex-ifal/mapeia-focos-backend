@@ -28,6 +28,7 @@ erDiagram
         boolean is_active
         timestamp created_at
         timestamp updated_at
+        string sector_region
     }
 
     OCCURRENCE["OCCURRENCE (Ocorrência)"] {

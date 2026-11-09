@@ -1,20 +1,35 @@
 import { Controller, Get, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
-import { AgentDashboardResponseDto, OccurrenceResponseDto } from '../dtos';
-import { AgentDashboardMapper, OccurrenceMapper } from '../mappers';
-import { OccurrenceService } from '../services';
+import {
+  AgentAvailabilityResponseDto,
+  AgentDashboardResponseDto,
+  OccurrenceResponseDto,
+} from '../dtos';
+import {
+  AgentAvailabilityMapper,
+  AgentDashboardMapper,
+  OccurrenceMapper,
+} from '../mappers';
+import { OccurrenceService, UserService } from '../services';
 
 @ApiTags('Agents')
-@Controller('agents')
+@Controller()
 export class AgentController {
   constructor(
     private readonly occurrenceService: OccurrenceService,
     private readonly agentDashboardMapper: AgentDashboardMapper,
     private readonly occurrenceMapper: OccurrenceMapper,
+    private readonly userService: UserService,
+    private readonly agentAvailabilityMapper: AgentAvailabilityMapper,
   ) {}
 
-  @Get('occurrences')
+  @Get('agents/occurrences')
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
     description:
@@ -41,7 +56,7 @@ export class AgentController {
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
   }
 
-  @Get('dashboard')
+  @Get('agents/dashboard')
   @ApiOperation({
     summary: 'Resumo diário do agente',
     description:
@@ -66,5 +81,20 @@ export class AgentController {
       DEV_USERS.AGENT_ID,
     );
     return this.agentDashboardMapper.toDto(readModel);
+  }
+
+  @Get('users/agentes')
+  @ApiOperation({
+    summary: 'Listar agentes e suas tarefas ativas',
+    description:
+      'Retorna todos os agentes ativos e a quantidade de ocorrências em andamento atualmente atribuídas a cada um.',
+  })
+  @ApiOkResponse({
+    description: 'Lista de agentes recuperada com sucesso.',
+    type: [AgentAvailabilityResponseDto],
+  })
+  async findAgents(): Promise<AgentAvailabilityResponseDto[]> {
+    const agents = await this.userService.findAgentsWithActiveTaskCounts();
+    return agents.map((agent) => this.agentAvailabilityMapper.toDto(agent));
   }
 }

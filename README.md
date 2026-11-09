@@ -55,6 +55,16 @@ PORT=8000
 DATABASE_URL=postgresql://mapeia_focos:12345678@localhost:5432/mapeia_focos
 ```
 
+O endpoint `GET /api/users/agentes` retorna todos os agentes ativos e o total
+de ocorrências em andamento atribuídas a cada um. O seed cria um agente de
+demonstração com setor/região `Centro`.
+
+```http
+GET http://localhost:8000/api/users/agentes
+```
+
+A resposta inclui `agentId`, `name`, `sectorRegion` e `totalActiveTasks`.
+
 ### 3. Subir o Banco de Dados
 
 Suba o container do PostgreSQL em background:
