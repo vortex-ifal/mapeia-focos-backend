@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { UserEntity, type AgentAvailabilityReadModel } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
@@ -14,21 +13,12 @@ export class UserService {
     private readonly usersRepository: UsersRepository,
     private readonly rolesRepository: RolesRepository,
     private readonly cryptoService: CryptoService,
-    private readonly configService: ConfigService,
   ) {}
 
-  async findAgentsWithActiveTaskCounts(): Promise<AgentAvailabilityReadModel[]> {
-    const municipality = this.configService
-      .getOrThrow<string>('MUNICIPALITY_NAME')
-      .trim();
-
-    if (!municipality) {
-      throw new InternalServerErrorException(
-        'A variável MUNICIPALITY_NAME deve conter o município atendido pelo sistema',
-      );
-    }
-
-    return this.usersRepository.findAgentsWithActiveTaskCounts(municipality);
+  async findAgentsWithActiveTaskCounts(): Promise<
+    AgentAvailabilityReadModel[]
+  > {
+    return this.usersRepository.findAgentsWithActiveTaskCounts();
   }
 
   async create(entity: UserEntity): Promise<string> {
@@ -54,7 +44,7 @@ export class UserService {
       }
       role = defaultRole;
     }
-    
+
     const rawPassword = entity.password;
     const passwordHash = await this.cryptoService.hash(rawPassword);
 

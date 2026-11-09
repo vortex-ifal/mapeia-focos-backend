@@ -1,9 +1,17 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, uuid, varchar, boolean, timestamp } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  varchar,
+  boolean,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 import { rolesTable } from './role.schema';
 
 export const usersTable = pgTable('users', {
-  id: uuid('id').default(sql`uuidv7()`).primaryKey(),
+  id: uuid('id')
+    .default(sql`uuidv7()`)
+    .primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   cpf: varchar('cpf', { length: 11 }).unique().notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
@@ -15,7 +23,6 @@ export const usersTable = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   sectorRegion: varchar('sector_region', { length: 100 }),
-  municipality: varchar('municipality', { length: 100 }),
 });
 
 export type UserSelect = typeof usersTable.$inferSelect;

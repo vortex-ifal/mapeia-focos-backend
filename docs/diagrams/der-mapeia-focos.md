@@ -29,7 +29,6 @@ erDiagram
         timestamp created_at
         timestamp updated_at
         string sector_region
-        string municipality
     }
 
     OCCURRENCE["OCCURRENCE (Ocorrência)"] {

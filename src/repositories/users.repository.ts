@@ -93,9 +93,9 @@ export class UsersRepository {
     return this.mapper.toDomainFromPersistence(result.user, role);
   }
 
-  async findAgentsWithActiveTaskCounts(
-    municipality: string,
-  ): Promise<AgentAvailabilityReadModel[]> {
+  async findAgentsWithActiveTaskCounts(): Promise<
+    AgentAvailabilityReadModel[]
+  > {
     const latestAssignments = this.db
       .selectDistinctOn([assignmentsTable.occurrenceId], {
         occurrenceId: assignmentsTable.occurrenceId,
@@ -145,13 +145,7 @@ export class UsersRepository {
       .from(usersTable)
       .innerJoin(rolesTable, eq(usersTable.roleId, rolesTable.id))
       .leftJoin(taskCounts, eq(taskCounts.agentId, usersTable.id))
-      .where(
-        and(
-          eq(rolesTable.name, 'agent'),
-          eq(usersTable.isActive, true),
-          eq(usersTable.municipality, municipality),
-        ),
-      )
+      .where(and(eq(rolesTable.name, 'agent'), eq(usersTable.isActive, true)))
       .orderBy(asc(usersTable.name));
   }
 }

@@ -55,23 +55,15 @@ PORT=8000
 DATABASE_URL=postgresql://mapeia_focos:12345678@localhost:5432/mapeia_focos
 ```
 
-Configure `MUNICIPALITY_NAME` no `.env` com o nome do município atendido. Esse
-valor é usado para filtrar os agentes na rota `GET /api/users/agentes`; os
-usuários com perfil `agent` precisam ter `municipality` preenchido com o mesmo
-nome. O seed atribui o valor configurado ao agente de demonstração e define
-seu setor como `Centro`.
+O endpoint `GET /api/users/agentes` retorna todos os agentes ativos e o total
+de ocorrências em andamento atribuídas a cada um. O seed cria um agente de
+demonstração com setor/região `Centro`.
 
-Depois de aplicar as migrations, associe os agentes já existentes ao município
-correto. Ajuste o valor antes de executar; preencha `sector_region` para cada
-agente com a região real de atuação:
-
-```sql
-UPDATE users AS u
-SET municipality = 'Nome do Município'
-FROM roles AS r
-WHERE u.role_id = r.id
-  AND r.name = 'agent';
+```http
+GET http://localhost:8000/api/users/agentes
 ```
+
+A resposta inclui `agentId`, `name`, `sectorRegion` e `totalActiveTasks`.
 
 ### 3. Subir o Banco de Dados
 
