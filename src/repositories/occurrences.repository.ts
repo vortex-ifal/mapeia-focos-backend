@@ -12,12 +12,15 @@ import {
   lte,
   ne,
   sql,
+  type SQL,
 } from 'drizzle-orm';
 import {
+  AgentWorklistOrderBy,
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
+  type AgentWorklistFilters,
   type HeatmapPointReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
@@ -398,8 +401,12 @@ export class OccurrencesRepository {
     };
   }
 
-  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+  async findAssignedToAgent(
+    agentId: string,
+    filters?: AgentWorklistFilters,
+  ): Promise<OccurrenceEntity[]> {
     const latestAssignments = this.getLatestAssignmentsSubquery();
+    const orderClauses = this.buildWorklistOrderClauses(filters);
 
     const rows = await this.db
       .select({
@@ -423,16 +430,7 @@ export class OccurrencesRepository {
           ne(occurrenceStatusesTable.key, OccurrenceStatusKey.REJECTED),
         ),
       )
-      .orderBy(
-        sql<number>`case ${occurrencesTable.priority}
-          when 'high' then 1
-          when 'medium' then 2
-          when 'low' then 3
-          else 4
-        end`,
-        asc(occurrencesTable.createdAt),
-        asc(occurrencesTable.id),
-      );
+      .orderBy(...orderClauses);
 
     return rows.map((row) =>
       this.mapper.toDomainFromPersistence({
@@ -486,5 +484,30 @@ export class OccurrencesRepository {
         desc(assignmentsTable.id),
       )
       .as('latest_assignments');
+  }
+
+  private buildWorklistOrderClauses(filters?: AgentWorklistFilters): SQL[] {
+    const priorityOrder = sql<number>`case ${occurrencesTable.priority}
+      when 'high' then 1
+      when 'medium' then 2
+      when 'low' then 3
+      else 4
+    end`;
+
+    const trailingOrder = [
+      priorityOrder,
+      asc(occurrencesTable.createdAt),
+      asc(occurrencesTable.id),
+    ];
+
+    if (filters?.orderBy === AgentWorklistOrderBy.STATUS) {
+      return [asc(occurrenceStatusesTable.name), ...trailingOrder];
+    }
+
+    if (filters?.orderBy === AgentWorklistOrderBy.ADDRESS) {
+      return [asc(occurrencesTable.address), ...trailingOrder];
+    }
+
+    return trailingOrder;
   }
 }

@@ -13,6 +13,7 @@ import {
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
+  type AgentWorklistFilters,
   type HeatmapPointReadModel,
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
@@ -279,7 +280,10 @@ export class OccurrenceService {
     return this.occurrencesRepository.findAgentDashboard(agentId);
   }
 
-  async findAssignedToAgent(agentId: string): Promise<OccurrenceEntity[]> {
+  async findAssignedToAgent(
+    agentId: string,
+    filters?: AgentWorklistFilters,
+  ): Promise<OccurrenceEntity[]> {
     const agent = await this.usersRepository.findById(agentId);
     if (!agent) {
       throw new NotFoundException('Agente não encontrado no sistema');
@@ -291,7 +295,7 @@ export class OccurrenceService {
       );
     }
 
-    return this.occurrencesRepository.findAssignedToAgent(agentId);
+    return this.occurrencesRepository.findAssignedToAgent(agentId, filters);
   }
 
   async findHeatmapPoints(): Promise<HeatmapPointReadModel[]> {

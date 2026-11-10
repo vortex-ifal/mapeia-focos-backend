@@ -1,7 +1,12 @@
-import { Controller, Get, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
-import { AgentDashboardResponseDto, OccurrenceResponseDto } from '../dtos';
+import {
+  AgentDashboardResponseDto,
+  AgentWorklistQueryDto,
+  OccurrenceResponseDto,
+} from '../dtos';
+import type { AgentWorklistFilters } from '../entities';
 import { AgentDashboardMapper, OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
 
@@ -18,13 +23,20 @@ export class AgentController {
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
     description:
-      'Retorna a lista de ocorrências ativas atribuídas ao agente autenticado, ' +
-      'ordenadas por prioridade (Alta > Média > Baixa) e data de criação (mais antigas primeiro).',
+      'Retorna a lista de ocorrências ativas atribuídas ao agente autenticado. ' +
+      'Permite ordenar/agrupar por status ou endereço ("status" ou "address"), ' +
+      'com ocorrências de prioridade alta sempre no topo de cada grupo. ' +
+      'Caso nenhum parâmetro seja informado, a lista é ordenada prioritariamente por urgência ' +
+      '(Alta > Média > Baixa) e data de criação.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Lista de trabalho do agente recuperada com sucesso.',
     type: [OccurrenceResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Critério de ordenação inválido.',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -34,9 +46,15 @@ export class AgentController {
     status: HttpStatus.CONFLICT,
     description: 'O usuário informado não possui perfil de agente.',
   })
-  async getWorklist(): Promise<OccurrenceResponseDto[]> {
+  async getWorklist(
+    @Query() query: AgentWorklistQueryDto,
+  ): Promise<OccurrenceResponseDto[]> {
+    const filters: AgentWorklistFilters = {
+      orderBy: query.orderBy,
+    };
     const occurrences = await this.occurrenceService.findAssignedToAgent(
       DEV_USERS.AGENT_ID,
+      filters,
     );
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
   }
