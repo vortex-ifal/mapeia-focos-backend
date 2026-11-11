@@ -1,4 +1,5 @@
 export * from './agent-dashboard-response.dto';
+export * from './assigned-agent-response.dto';
 export * from './create-occurrence-response.dto';
 export * from './heatmap-response.dto';
 export * from './occurrence-protocol-status-response.dto';

@@ -231,8 +231,8 @@ export class OccurrencesController {
   async findById(
     @Param() params: UuidParamDto,
   ): Promise<OccurrenceDetailResponseDto> {
-    const entity = await this.occurrenceService.findDetailsById(params.id);
-    return this.occurrenceMapper.toDetailsDto(entity);
+    const detail = await this.occurrenceService.findDetailsById(params.id);
+    return this.occurrenceMapper.toDetailsDto(detail);
   }
 
   @Post(':id/media')

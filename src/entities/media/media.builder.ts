@@ -54,6 +54,11 @@ export class MediaBuilder {
     return this;
   }
 
+  withUrl(url?: string): this {
+    this.props.url = url;
+    return this;
+  }
+
   build(): MediaEntity {
     if (
       !this.props.occurrenceId ||
