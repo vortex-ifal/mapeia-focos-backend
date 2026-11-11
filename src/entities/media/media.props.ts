@@ -9,4 +9,5 @@ export interface MediaProps {
   type?: MediaType;
   isPublic?: boolean;
   uploadedAt?: Date;
+  url?: string;
 }

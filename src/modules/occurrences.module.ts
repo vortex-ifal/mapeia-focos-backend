@@ -9,10 +9,11 @@ import {
 } from '../mappers';
 import {
   AssignmentsRepository,
+  MediaRepository,
   OccurrencesRepository,
   OccurrenceStatusesRepository,
 } from '../repositories';
-import { OccurrenceService } from '../services';
+import { MediaService, OccurrenceService } from '../services';
 import { UsersModule } from './users.module';
 
 @Module({
@@ -26,6 +27,8 @@ import { UsersModule } from './users.module';
     OccurrenceMapper,
     OccurrenceStatusMapper,
     MediaMapper,
+    MediaService,
+    MediaRepository,
     AssignmentMapper,
     AgentDashboardMapper,
   ],
@@ -33,6 +36,8 @@ import { UsersModule } from './users.module';
     OccurrenceService,
     OccurrencesRepository,
     OccurrenceStatusesRepository,
+    MediaService,
+    MediaRepository,
   ],
 })
 export class OccurrencesModule {}

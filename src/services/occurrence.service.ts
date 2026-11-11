@@ -18,6 +18,7 @@ import {
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
+  type OccurrenceDetailReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -28,6 +29,7 @@ import {
   UsersRepository,
 } from '../repositories';
 import { TERRITORIAL_DEFAULT_LIMIT } from '../constants';
+import { MediaService } from './media.service';
 
 @Injectable()
 export class OccurrenceService {
@@ -36,6 +38,7 @@ export class OccurrenceService {
     private readonly occurrenceStatusesRepository: OccurrenceStatusesRepository,
     private readonly usersRepository: UsersRepository,
     private readonly assignmentsRepository: AssignmentsRepository,
+    private readonly mediaService: MediaService,
   ) {}
 
   async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
@@ -81,12 +84,17 @@ export class OccurrenceService {
     return this.occurrencesRepository.findById(id);
   }
 
-  async findDetailsById(id: string): Promise<OccurrenceEntity> {
-    const occurrence = await this.occurrencesRepository.findById(id);
-    if (!occurrence) {
+  async findDetailsById(id: string): Promise<OccurrenceDetailReadModel> {
+    const detail = await this.occurrencesRepository.findDetailsById(id);
+    if (!detail) {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
-    return occurrence;
+
+    if (detail.occurrence.media && detail.occurrence.media.length > 0) {
+      await this.mediaService.signMediaList(detail.occurrence.media);
+    }
+
+    return detail;
   }
 
   async updateStatus(
