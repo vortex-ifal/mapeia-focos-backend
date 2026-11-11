@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -8,15 +9,22 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBody,
+  ApiConsumes,
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
+import { memoryStorage } from 'multer';
 import { DEV_USERS } from '../constants';
 import { type ListOccurrencesFilters } from '../entities';
 import {
@@ -34,10 +42,11 @@ import {
   TerritorialContextResponseDto,
   UpdateOccurrencePriorityDto,
   UpdateOccurrenceStatusDto,
+  UploadMediaResponseDto,
   UuidParamDto,
 } from '../dtos';
-import { OccurrenceMapper } from '../mappers';
-import { OccurrenceService } from '../services';
+import { MediaMapper, OccurrenceMapper } from '../mappers';
+import { MediaService, OccurrenceService } from '../services';
 
 @ApiTags('Occurrences')
 @Controller('occurrences')
@@ -45,6 +54,8 @@ export class OccurrencesController {
   constructor(
     private readonly occurrenceService: OccurrenceService,
     private readonly occurrenceMapper: OccurrenceMapper,
+    private readonly mediaService: MediaService,
+    private readonly mediaMapper: MediaMapper,
   ) {}
 
   @Post()
@@ -222,6 +233,70 @@ export class OccurrencesController {
   ): Promise<OccurrenceDetailResponseDto> {
     const entity = await this.occurrenceService.findDetailsById(params.id);
     return this.occurrenceMapper.toDetailsDto(entity);
+  }
+
+  @Post(':id/media')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Fazer upload de mídias para uma ocorrência',
+    description:
+      'Envia até 3 arquivos vinculados à ocorrência especificada (máximo 10MB por arquivo).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    description: 'Identificador único (UUID) da ocorrência',
+    example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: 'Lista de arquivos de mídia (máx. 3)',
+        },
+      },
+      required: ['files'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Mídias enviadas com sucesso.',
+    type: [UploadMediaResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Nenhum arquivo enviado ou limites excedidos.',
+  })
+  @UseInterceptors(
+    FilesInterceptor('files', 3, {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+    }),
+  )
+  async uploadMedia(
+    @Param() params: UuidParamDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<UploadMediaResponseDto[]> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('Nenhum arquivo enviado');
+    }
+
+    const results: UploadMediaResponseDto[] = [];
+
+    for (const file of files) {
+      const entity = await this.mediaService.uploadMedia(params.id, file);
+      results.push(this.mediaMapper.toDto(entity));
+    }
+
+    return results;
   }
 
   @Patch(':id/status')
