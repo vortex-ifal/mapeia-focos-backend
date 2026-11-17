@@ -25,6 +25,7 @@ import {
   type ListOccurrencesFilters,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
+  type OccurrenceDetailReadModel,
   type OccurrenceProtocolStatusReadModel,
 } from '../entities';
 import {
@@ -35,6 +36,7 @@ import {
   occurrencesTable,
   occurrenceStatusesTable,
   statusHistoriesTable,
+  usersTable,
 } from '../infra';
 import { OccurrenceMapper } from '../mappers';
 
@@ -83,17 +85,60 @@ export class OccurrencesRepository {
       return null;
     }
 
+    return this.mapper.toDomainFromPersistence({
+      ...row.occurrence,
+      status: row.status,
+    });
+  }
+
+  async findDetailsById(id: string): Promise<OccurrenceDetailReadModel | null> {
+    const latestAssignments = this.getLatestAssignmentsSubquery();
+
+    const [row] = await this.db
+      .select({
+        occurrence: occurrencesTable,
+        status: occurrenceStatusesTable,
+        agentId: usersTable.id,
+        agentName: usersTable.name,
+      })
+      .from(occurrencesTable)
+      .leftJoin(
+        occurrenceStatusesTable,
+        eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+      )
+      .leftJoin(
+        latestAssignments,
+        eq(occurrencesTable.id, latestAssignments.occurrenceId),
+      )
+      .leftJoin(usersTable, eq(latestAssignments.agentId, usersTable.id))
+      .where(
+        and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
     const mediaRows = await this.db
       .select()
       .from(mediaTable)
       .where(eq(mediaTable.occurrenceId, id))
       .orderBy(asc(mediaTable.uploadedAt));
 
-    return this.mapper.toDomainFromPersistence({
+    const occurrence = this.mapper.toDomainFromPersistence({
       ...row.occurrence,
       status: row.status,
       media: mediaRows,
     });
+
+    return {
+      occurrence,
+      assignedAgent:
+        row.agentId && row.agentName
+          ? { id: row.agentId, name: row.agentName }
+          : null,
+    };
   }
 
   async findStatusByProtocol(

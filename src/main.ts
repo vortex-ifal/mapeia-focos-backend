@@ -29,10 +29,6 @@ async function bootstrap() {
     )
     .setVersion('0.1.0')
     .addTag('Occurrences', 'Registro e acompanhamento de ocorrências e focos')
-    .addTag(
-      'Media',
-      'Upload e recuperação de arquivos de mídia vinculados a ocorrências',
-    )
     .addTag('Users', 'Gerenciamento e cadastro de usuários')
     .addTag('Agents', 'Dashboard e recursos do módulo do agente de endemias')
     .build();

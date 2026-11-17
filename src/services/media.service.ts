@@ -17,8 +17,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { MediaBuilder, MediaEntity } from '../entities';
 import { STORAGE_PROVIDER } from '../infra';
-import { MediaRepository } from '../repositories';
-import { OccurrenceService } from './occurrence.service';
+import { MediaRepository, OccurrencesRepository } from '../repositories';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
@@ -41,7 +40,7 @@ export class MediaService {
     @Inject(STORAGE_PROVIDER)
     private readonly s3: S3Client,
     private readonly mediaRepository: MediaRepository,
-    private readonly occurrenceService: OccurrenceService,
+    private readonly occurrencesRepository: OccurrencesRepository,
     private readonly configService: ConfigService,
   ) {
     this.bucket = this.configService.getOrThrow<string>('R2_BUCKET_NAME');
@@ -104,7 +103,7 @@ export class MediaService {
     }
 
     // 2. Verificar previamente se a ocorrência existe (fail-fast antes do upload S3)
-    const occurrence = await this.occurrenceService.findById(occurrenceId);
+    const occurrence = await this.occurrencesRepository.findById(occurrenceId);
     if (!occurrence) {
       throw new NotFoundException('Ocorrência não encontrada');
     }
@@ -159,7 +158,7 @@ export class MediaService {
         );
       } catch (cleanupError) {
         this.logger.error(
-          `Falha ao limpar objeto órfão ${storageKey} no bucket ${this.bucket}: ${cleanupError}`,
+          `Falha ao limpar objeto órfão ${storageKey} no bucket ${this.bucket}: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
         );
       }
 
@@ -167,28 +166,28 @@ export class MediaService {
     }
   }
 
-  async getSignedUrl(
-    mediaId: string,
-  ): Promise<{ signedUrl: string; expiresAt: Date }> {
-    const media = await this.mediaRepository.findById(mediaId);
-    if (!media) {
-      throw new NotFoundException('Mídia não encontrada');
-    }
-
+  private async generateSignedUrl(
+    storageKey: string,
+    expiresInSeconds: number = PRESIGNED_URL_EXPIRES_IN,
+  ): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.bucket,
-      Key: media.storageKey,
+      Key: storageKey,
     });
 
-    const signedUrl = await getSignedUrl(this.s3, command, {
-      expiresIn: PRESIGNED_URL_EXPIRES_IN,
+    return getSignedUrl(this.s3, command, {
+      expiresIn: expiresInSeconds,
     });
+  }
 
-    const expiresAt = new Date(Date.now() + PRESIGNED_URL_EXPIRES_IN * 1000);
-
-    return {
-      signedUrl,
-      expiresAt,
-    };
+  async signMediaList(mediaList: MediaEntity[]): Promise<MediaEntity[]> {
+    await Promise.all(
+      mediaList.map(async (media) => {
+        if (media.storageKey) {
+          media.url = await this.generateSignedUrl(media.storageKey);
+        }
+      }),
+    );
+    return mediaList;
   }
 }

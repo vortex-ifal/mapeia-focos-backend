@@ -9,6 +9,7 @@ export class MediaEntity {
   private readonly _type: MediaType;
   private readonly _isPublic: boolean;
   private readonly _uploadedAt?: Date;
+  private _url?: string;
 
   constructor(props: MediaProps) {
     this._id = props.id;
@@ -19,6 +20,7 @@ export class MediaEntity {
     this._type = props.type ?? 'photo';
     this._isPublic = false; // Invariante de negócio RN03: mídias de ocorrência nunca são públicas
     this._uploadedAt = props.uploadedAt;
+    this._url = props.url;
   }
 
   get id(): string | undefined {
@@ -51,5 +53,13 @@ export class MediaEntity {
 
   get uploadedAt(): Date | undefined {
     return this._uploadedAt;
+  }
+
+  get url(): string | undefined {
+    return this._url;
+  }
+
+  set url(url: string | undefined) {
+    this._url = url;
   }
 }

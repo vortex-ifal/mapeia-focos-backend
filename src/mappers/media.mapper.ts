@@ -50,16 +50,11 @@ export class MediaMapper {
     if (!entity.id) {
       throw new Error('MediaEntity id is required to map to DTO');
     }
-    if (!entity.uploadedAt) {
-      throw new Error('MediaEntity uploadedAt is required to map to DTO');
-    }
 
     return {
       id: entity.id,
-      mimeType: entity.mimeType,
-      fileSizeBytes: entity.fileSizeBytes,
+      url: entity.url ?? '',
       type: entity.type,
-      uploadedAt: entity.uploadedAt,
     };
   }
 }

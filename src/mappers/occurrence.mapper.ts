@@ -7,6 +7,7 @@ import {
   type HeatmapPointReadModel,
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
+  type OccurrenceDetailReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -191,8 +192,10 @@ export class OccurrenceMapper {
     };
   }
 
-  toDetailsDto(entity: OccurrenceEntity): OccurrenceDetailResponseDto {
-    const baseDto = this.toDto(entity);
+  toDetailsDto(
+    readModel: OccurrenceDetailReadModel,
+  ): OccurrenceDetailResponseDto {
+    const baseDto = this.toDto(readModel.occurrence);
     return {
       id: baseDto.id,
       protocol: baseDto.protocol,
@@ -205,7 +208,15 @@ export class OccurrenceMapper {
       updatedAt: baseDto.updatedAt,
       status: baseDto.status,
       priority: baseDto.priority,
-      media: entity.media.map((item) => this.mediaMapper.toResponseDto(item)),
+      assignedAgent: readModel.assignedAgent
+        ? {
+            id: readModel.assignedAgent.id,
+            name: readModel.assignedAgent.name,
+          }
+        : null,
+      media: readModel.occurrence.media.map((item) =>
+        this.mediaMapper.toResponseDto(item),
+      ),
     };
   }
 
