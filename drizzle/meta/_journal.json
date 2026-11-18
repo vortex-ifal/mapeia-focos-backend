@@ -36,6 +36,13 @@
       "when": 1793849080508,
       "tag": "20261105032440_create_assignments_table",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795027315838,
+      "tag": "20261118184155_create_occurrence_events_and_history_tables",
+      "breakpoints": true
     }
   ]
 }

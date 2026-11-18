@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '../../src/infra/database/schema';
+import { seedOccurrenceEvents } from './occurrence-events.seed';
 import { seedOccurrenceStatuses } from './occurrence-statuses.seed';
 import { seedRoles } from './roles.seed';
 import { seedUsers } from './users.seed';
@@ -31,6 +32,10 @@ async function runSeeds() {
     console.log('⏳ Populando status de ocorrência...');
     await seedOccurrenceStatuses(db);
     console.log('✅ Status de ocorrência populados com sucesso.');
+
+    console.log('⏳ Populando eventos de ocorrência...');
+    await seedOccurrenceEvents(db);
+    console.log('✅ Eventos de ocorrência populados com sucesso.');
 
     console.log('🎉 Todos os seeds foram aplicados com sucesso!');
   } catch (error) {

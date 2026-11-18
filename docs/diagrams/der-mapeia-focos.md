@@ -121,6 +121,20 @@ erDiagram
         uuid new_status_id FK
     }
 
+    OCCURRENCE_EVENT["OCCURRENCE_EVENT (Catálogo de Eventos)"] {
+        uuid id PK
+        string key UK
+        string description
+    }
+
+    OCCURRENCE_HISTORY["OCCURRENCE_HISTORY (Linha do Tempo de Ocorrência)"] {
+        uuid id PK
+        uuid occurrence_id FK
+        uuid event_id FK
+        uuid user_id FK
+        timestamp created_at
+    }
+
     NOTIFICATION["NOTIFICATION (Notificação)"] {
         uuid id PK
         uuid recipient_user_id FK
@@ -146,6 +160,8 @@ erDiagram
     OCCURRENCE ||--o{ ASSIGNMENT    : "is assigned via"
     OCCURRENCE ||--o{ INSPECTION    : "results in"
     OCCURRENCE ||--o{ STATUS_HISTORY : "tracks changes"
+    OCCURRENCE ||--o{ OCCURRENCE_HISTORY : "tracks timeline in"
+    OCCURRENCE_EVENT ||--o{ OCCURRENCE_HISTORY : "categorizes"
     OCCURRENCE_STATUS ||--o{ STATUS_HISTORY : "referenced as previous_status"
     OCCURRENCE_STATUS ||--o{ STATUS_HISTORY : "referenced as new_status"
     OCCURRENCE ||--o{ NOTIFICATION  : "triggers"
@@ -155,6 +171,7 @@ erDiagram
     USER ||--o{ ASSIGNMENT          : "receives (agent)"
     USER ||--o{ INSPECTION          : "performs (agent)"
     USER ||--o{ STATUS_HISTORY      : "changes"
+    USER ||--o{ OCCURRENCE_HISTORY  : "authors"
     USER ||--o{ NOTIFICATION        : "receives"
 ```
 
@@ -171,6 +188,7 @@ erDiagram
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade/tabela `STATUS_HISTORY` para auditoria de mudanças com chave primária composta `(occurrence_id, changed_at)`, vinculando `previous_status_id` e `new_status_id` a `OCCURRENCE_STATUS` |
+| Linha do tempo | Entidades `OCCURRENCE_EVENT` (catálogo mestre de ações com `key` única e `description`) e `OCCURRENCE_HISTORY` (registro imutável de eventos vinculados à ocorrência e ao usuário autor) |
 | Mídias | Entidade `MEDIA` separada com `storage_key` e flag `is_public` (privacidade — RN03). Armazena a chave privada do Cloudflare R2; o acesso é intermediado via Presigned URLs com expiração curta. |
 | Atribuição | Entidade `ASSIGNMENT` registrando gestor, agente e data |
 | Localização | Entidade `LOCATION` separada (GPS ou manual — RF05) |
@@ -195,4 +213,6 @@ erDiagram
 | `ASSIGNMENT` | RF15, RN10 | Gestor |
 | `INSPECTION` | RF12, RF13, RN07, RN08 | Agente |
 | `STATUS_HISTORY` | RF08, RN06 | Sistema |
+| `OCCURRENCE_EVENT` | RF08, RN06 | Sistema |
+| `OCCURRENCE_HISTORY` | RF08, RN06 | Todos |
 | `NOTIFICATION` | RF09 | Sistema |
