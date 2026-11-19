@@ -3,7 +3,7 @@ import {
   Injectable,
   InternalServerErrorException
 } from '@nestjs/common';
-import { UserEntity } from '../entities';
+import { UserEntity, type AgentWorkloadReadModel } from '../entities';
 import { CryptoService } from '../infra';
 import { RolesRepository, UsersRepository } from '../repositories';
 
@@ -74,5 +74,9 @@ export class UserService {
 
   async findByCpf(cpf: string): Promise<UserEntity | null> {
     return this.usersRepository.findByCpf(cpf);
+  }
+
+  async findAgentsWithActiveTasks(): Promise<AgentWorkloadReadModel[]> {
+    return this.usersRepository.findAgentsWithActiveTasks();
   }
 }
