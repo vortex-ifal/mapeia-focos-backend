@@ -4,4 +4,5 @@ export * from './heatmap-point.read-model';
 export * from './nearby-occurrence.read-model';
 export * from './occurrence-created.read-model';
 export * from './occurrence-detail.read-model';
+export * from './occurrence-history.read-model';
 export * from './occurrence-protocol-status.read-model';

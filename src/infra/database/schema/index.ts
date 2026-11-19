@@ -5,3 +5,5 @@ export * from './occurrence.schema';
 export * from './media.schema';
 export * from './status-history.schema';
 export * from './assignment.schema';
+export * from './occurrence-event.schema';
+export * from './occurrence-history.schema';
