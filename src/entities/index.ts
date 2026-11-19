@@ -5,3 +5,5 @@ export * from './occurrence';
 export * from './occurrence-status';
 export * from './media';
 export * from './assignment';
+export * from './occurrence-event';
+export * from './occurrence-history';

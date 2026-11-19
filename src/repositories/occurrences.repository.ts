@@ -19,6 +19,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  OccurrenceHistoryEntity,
   type AgentDashboardReadModel,
   type AgentWorklistFilters,
   type HeatmapPointReadModel,
@@ -26,6 +27,7 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailReadModel,
+  type OccurrenceHistoryReadModel,
   type OccurrenceProtocolStatusReadModel,
 } from '../entities';
 import {
@@ -33,12 +35,14 @@ import {
   DRIZZLE_PROVIDER,
   type DrizzleDB,
   mediaTable,
+  occurrenceEventsTable,
+  occurrenceHistoryTable,
   occurrencesTable,
   occurrenceStatusesTable,
   statusHistoriesTable,
   usersTable,
 } from '../infra';
-import { OccurrenceMapper } from '../mappers';
+import { OccurrenceHistoryMapper, OccurrenceMapper } from '../mappers';
 
 @Injectable()
 export class OccurrencesRepository {
@@ -46,23 +50,37 @@ export class OccurrencesRepository {
     @Inject(DRIZZLE_PROVIDER)
     private readonly db: DrizzleDB,
     private readonly mapper: OccurrenceMapper,
+    private readonly historyMapper: OccurrenceHistoryMapper,
   ) {}
 
-  async create(entity: OccurrenceEntity): Promise<OccurrenceCreatedReadModel> {
+  async create(
+    entity: OccurrenceEntity,
+    historyEntity?: OccurrenceHistoryEntity,
+  ): Promise<OccurrenceCreatedReadModel> {
     const data = this.mapper.toPersistence(entity);
 
-    const [inserted] = await this.db
-      .insert(occurrencesTable)
-      .values(data)
-      .returning({
-        id: occurrencesTable.id,
-        protocol: occurrencesTable.protocol,
-      });
+    return this.db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(occurrencesTable)
+        .values(data)
+        .returning({
+          id: occurrencesTable.id,
+          protocol: occurrencesTable.protocol,
+        });
 
-    return {
-      id: inserted.id,
-      protocol: inserted.protocol,
-    };
+      if (historyEntity) {
+        await tx.insert(occurrenceHistoryTable).values({
+          occurrenceId: inserted.id,
+          eventId: historyEntity.eventId,
+          userId: historyEntity.userId ,
+        });
+      }
+
+      return {
+        id: inserted.id,
+        protocol: inserted.protocol,
+      };
+    });
   }
 
   async findById(id: string): Promise<OccurrenceEntity | null> {
@@ -179,6 +197,7 @@ export class OccurrencesRepository {
     previousStatusId: string,
     newStatusId: string,
     changedByUserId: string,
+    historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       const [updated] = await tx
@@ -206,6 +225,12 @@ export class OccurrencesRepository {
         changedByUserId,
       });
 
+      if (historyEntity) {
+        await tx
+          .insert(occurrenceHistoryTable)
+          .values(this.historyMapper.toPersistence(historyEntity));
+      }
+
       return true;
     });
   }
@@ -213,19 +238,65 @@ export class OccurrencesRepository {
   async updatePriority(
     id: string,
     priority: OccurrencePriority,
+    historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
-    const [updated] = await this.db
-      .update(occurrencesTable)
-      .set({
-        priority,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
-      )
-      .returning({ id: occurrencesTable.id });
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({
+          priority,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+        )
+        .returning({ id: occurrencesTable.id });
 
-    return Boolean(updated);
+      if (!updated) {
+        return false;
+      }
+
+      if (historyEntity) {
+        await tx
+          .insert(occurrenceHistoryTable)
+          .values(this.historyMapper.toPersistence(historyEntity));
+      }
+
+      return true;
+    });
+  }
+
+  async findHistoryByOccurrenceId(
+    occurrenceId: string,
+  ): Promise<OccurrenceHistoryReadModel[]> {
+    const rows = await this.db
+      .select({
+        id: occurrenceHistoryTable.id,
+        eventKey: occurrenceEventsTable.key,
+        eventDescription: occurrenceEventsTable.description,
+        userId: usersTable.id,
+        userName: usersTable.name,
+        createdAt: occurrenceHistoryTable.createdAt,
+      })
+      .from(occurrenceHistoryTable)
+      .innerJoin(
+        occurrenceEventsTable,
+        eq(occurrenceHistoryTable.eventId, occurrenceEventsTable.id),
+      )
+      .leftJoin(usersTable, eq(occurrenceHistoryTable.userId, usersTable.id))
+      .where(eq(occurrenceHistoryTable.occurrenceId, occurrenceId))
+      .orderBy(asc(occurrenceHistoryTable.createdAt));
+
+    return rows.map((row) => ({
+      id: row.id,
+      eventKey: row.eventKey,
+      eventDescription: row.eventDescription,
+      author:
+        row.userId && row.userName
+          ? { id: row.userId, name: row.userName }
+          : null,
+      createdAt: row.createdAt,
+    }));
   }
 
   async softDelete(id: string): Promise<boolean> {

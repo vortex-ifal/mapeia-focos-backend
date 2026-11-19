@@ -8,6 +8,7 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailReadModel,
+  type OccurrenceHistoryReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
@@ -18,6 +19,7 @@ import {
   HeatmapResponseDto,
   NearbyOccurrenceDto,
   OccurrenceDetailResponseDto,
+  OccurrenceHistoryResponseDto,
   OccurrenceProtocolStatusResponseDto,
   OccurrenceResponseDto,
   PaginationResponseDto,
@@ -246,6 +248,20 @@ export class OccurrenceMapper {
         latitude: p.latitude,
         longitude: p.longitude,
       })),
+    };
+  }
+
+  toHistoryResponseDto(
+    readModel: OccurrenceHistoryReadModel,
+  ): OccurrenceHistoryResponseDto {
+    return {
+      id: readModel.id,
+      eventKey: readModel.eventKey,
+      eventDescription: readModel.eventDescription,
+      author: readModel.author
+        ? { id: readModel.author.id, name: readModel.author.name }
+        : null,
+      createdAt: readModel.createdAt,
     };
   }
 

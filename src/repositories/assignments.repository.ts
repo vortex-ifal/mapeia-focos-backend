@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { AssignmentEntity } from '../entities';
+import { AssignmentEntity, OccurrenceHistoryEntity } from '../entities';
 import {
   assignmentsTable,
   DRIZZLE_PROVIDER,
   type DrizzleDB,
+  occurrenceHistoryTable,
   occurrencesTable,
   statusHistoriesTable,
 } from '../infra';
-import { AssignmentMapper } from '../mappers';
+import { AssignmentMapper, OccurrenceHistoryMapper } from '../mappers';
 
 @Injectable()
 export class AssignmentsRepository {
@@ -16,12 +17,14 @@ export class AssignmentsRepository {
     @Inject(DRIZZLE_PROVIDER)
     private readonly db: DrizzleDB,
     private readonly mapper: AssignmentMapper,
+    private readonly historyMapper: OccurrenceHistoryMapper,
   ) {}
 
   async createWithStatusUpdate(
     entity: AssignmentEntity,
     previousStatusId: string,
     newStatusId: string,
+    historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     const data = this.mapper.toPersistence(entity);
 
@@ -52,6 +55,12 @@ export class AssignmentsRepository {
         newStatusId,
         changedByUserId: entity.assignedByManagerId,
       });
+
+      if (historyEntity) {
+        await tx
+          .insert(occurrenceHistoryTable)
+          .values(this.historyMapper.toPersistence(historyEntity));
+      }
 
       return true;
     });

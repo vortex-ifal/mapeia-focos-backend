@@ -34,6 +34,7 @@ import {
   FindAllOccurrencesQueryDto,
   HeatmapResponseDto,
   OccurrenceDetailResponseDto,
+  OccurrenceHistoryResponseDto,
   OccurrenceProtocolStatusResponseDto,
   OccurrenceResponseDto,
   PaginationResponseDto,
@@ -363,7 +364,11 @@ export class OccurrencesController {
     @Param() params: UuidParamDto,
     @Body() dto: UpdateOccurrencePriorityDto,
   ): Promise<void> {
-    await this.occurrenceService.updatePriority(params.id, dto.priority);
+    await this.occurrenceService.updatePriority(
+      params.id,
+      dto.priority,
+      DEV_USERS.MANAGER_ID,
+    );
   }
 
   @Patch(':id/assign')
@@ -399,6 +404,36 @@ export class OccurrencesController {
       params.id,
       dto.agentId,
       DEV_USERS.MANAGER_ID,
+    );
+  }
+
+  @Get(':id/history')
+  @ApiOperation({
+    summary: 'Consultar linha do tempo de uma ocorrência',
+    description:
+      'Retorna a lista cronológica de todos os eventos registrados no ciclo de vida da ocorrência (criação, atualizações de status, prioridade e despachos).',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Linha do tempo da ocorrência retornada com sucesso.',
+    type: [OccurrenceHistoryResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro de rota inválido (ex.: ID não é um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  async findHistory(
+    @Param() params: UuidParamDto,
+  ): Promise<OccurrenceHistoryResponseDto[]> {
+    const history = await this.occurrenceService.findHistoryByOccurrenceId(
+      params.id,
+    );
+    return history.map((item) =>
+      this.occurrenceMapper.toHistoryResponseDto(item),
     );
   }
 }

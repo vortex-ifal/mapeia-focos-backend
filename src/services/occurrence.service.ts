@@ -10,6 +10,8 @@ import {
   AssignmentBuilder,
   createPaginationReadModel,
   OccurrenceEntity,
+  OccurrenceEventKey,
+  OccurrenceHistoryBuilder,
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
@@ -19,11 +21,13 @@ import {
   type NearbyOccurrenceReadModel,
   type OccurrenceCreatedReadModel,
   type OccurrenceDetailReadModel,
+  type OccurrenceHistoryReadModel,
   type OccurrenceProtocolStatusReadModel,
   type PaginationReadModel,
 } from '../entities';
 import {
   AssignmentsRepository,
+  OccurrenceEventsRepository,
   OccurrencesRepository,
   OccurrenceStatusesRepository,
   UsersRepository,
@@ -36,6 +40,7 @@ export class OccurrenceService {
   constructor(
     private readonly occurrencesRepository: OccurrencesRepository,
     private readonly occurrenceStatusesRepository: OccurrenceStatusesRepository,
+    private readonly occurrenceEventsRepository: OccurrenceEventsRepository,
     private readonly usersRepository: UsersRepository,
     private readonly assignmentsRepository: AssignmentsRepository,
     private readonly mediaService: MediaService,
@@ -61,7 +66,21 @@ export class OccurrenceService {
 
     entity.protocol = await this.generateUniqueProtocol();
 
-    return this.occurrencesRepository.create(entity);
+    const createdEvent = await this.occurrenceEventsRepository.findByKey(
+      OccurrenceEventKey.OCCURRENCE_CREATED,
+    );
+    if (!createdEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento padrão "occurrence_created" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(entity.id ?? 'pending')
+      .withEventId(createdEvent.id)
+      .build();
+
+    return this.occurrencesRepository.create(entity, historyEntity);
   }
 
   async findStatusByProtocol(
@@ -97,6 +116,17 @@ export class OccurrenceService {
     return detail;
   }
 
+  async findHistoryByOccurrenceId(
+    id: string,
+  ): Promise<OccurrenceHistoryReadModel[]> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    return this.occurrencesRepository.findHistoryByOccurrenceId(id);
+  }
+
   async updateStatus(
     id: string,
     statusKey: OccurrenceStatusKey | string,
@@ -128,11 +158,28 @@ export class OccurrenceService {
       );
     }
 
+    const statusUpdatedEvent =
+      await this.occurrenceEventsRepository.findByKey(
+        OccurrenceEventKey.STATUS_UPDATED,
+      );
+    if (!statusUpdatedEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento "status_updated" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(id)
+      .withEventId(statusUpdatedEvent.id)
+      .withUserId(userId)
+      .build();
+
     const updated = await this.occurrencesRepository.updateStatusWithHistory(
       id,
       previousStatusId,
       newStatus.id,
       userId,
+      historyEntity,
     );
 
     if (!updated) {
@@ -145,6 +192,7 @@ export class OccurrenceService {
   async updatePriority(
     id: string,
     priority: OccurrencePriority,
+    userId: string,
   ): Promise<void> {
     const occurrence = await this.occurrencesRepository.findById(id);
     if (!occurrence) {
@@ -157,9 +205,26 @@ export class OccurrenceService {
       );
     }
 
+    const priorityUpdatedEvent =
+      await this.occurrenceEventsRepository.findByKey(
+        OccurrenceEventKey.PRIORITY_UPDATED,
+      );
+    if (!priorityUpdatedEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento "priority_updated" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(id)
+      .withEventId(priorityUpdatedEvent.id)
+      .withUserId(userId)
+      .build();
+
     const updated = await this.occurrencesRepository.updatePriority(
       id,
       priority,
+      historyEntity,
     );
 
     if (!updated) {
@@ -218,10 +283,27 @@ export class OccurrenceService {
       .withAssignedByManagerId(managerId)
       .build();
 
+    const agentAssignedEvent =
+      await this.occurrenceEventsRepository.findByKey(
+        OccurrenceEventKey.AGENT_ASSIGNED,
+      );
+    if (!agentAssignedEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento "agent_assigned" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(occurrenceId)
+      .withEventId(agentAssignedEvent.id)
+      .withUserId(managerId)
+      .build();
+
     const success = await this.assignmentsRepository.createWithStatusUpdate(
       assignmentEntity,
       previousStatusId,
       newStatus.id,
+      historyEntity,
     );
 
     if (!success) {
