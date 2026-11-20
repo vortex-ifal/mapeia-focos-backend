@@ -89,7 +89,7 @@ export class AgentController {
     return this.agentDashboardMapper.toDto(readModel);
   }
 
-  @Get('users/agents')
+  @Get('agents')
   @ApiOperation({
     summary: 'Listar agentes e suas tarefas em andamento',
     description:
