@@ -3,23 +3,26 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DEV_USERS } from '../constants';
 import {
   AgentDashboardResponseDto,
+  AgentWorkloadResponseDto,
   AgentWorklistQueryDto,
   OccurrenceResponseDto,
 } from '../dtos';
 import type { AgentWorklistFilters } from '../entities';
-import { AgentDashboardMapper, OccurrenceMapper } from '../mappers';
-import { OccurrenceService } from '../services';
+import { AgentDashboardMapper, OccurrenceMapper, UserMapper } from '../mappers';
+import { OccurrenceService, UserService } from '../services';
 
 @ApiTags('Agents')
-@Controller('agents')
+@Controller()
 export class AgentController {
   constructor(
     private readonly occurrenceService: OccurrenceService,
     private readonly agentDashboardMapper: AgentDashboardMapper,
     private readonly occurrenceMapper: OccurrenceMapper,
+    private readonly userService: UserService,
+    private readonly userMapper: UserMapper,
   ) {}
 
-  @Get('occurrences')
+  @Get('agents/occurrences')
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
     description:
@@ -59,7 +62,7 @@ export class AgentController {
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
   }
 
-  @Get('dashboard')
+  @Get('agents/dashboard')
   @ApiOperation({
     summary: 'Resumo diário do agente',
     description:
@@ -84,5 +87,22 @@ export class AgentController {
       DEV_USERS.AGENT_ID,
     );
     return this.agentDashboardMapper.toDto(readModel);
+  }
+
+  @Get('users/agents')
+  @ApiOperation({
+    summary: 'Listar agentes e suas tarefas em andamento',
+    description:
+      'Retorna os agentes ativos ordenados pela quantidade de ocorrências em atendimento atribuídas.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de agentes ativos e suas quantidades de tarefas.',
+    type: AgentWorkloadResponseDto,
+    isArray: true,
+  })
+  async findAgentsWithActiveTasks(): Promise<AgentWorkloadResponseDto[]> {
+    const agents = await this.userService.findAgentsWithActiveTasks();
+    return agents.map((agent) => this.userMapper.toAgentWorkloadDto(agent));
   }
 }
