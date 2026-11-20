@@ -1,7 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { UserEntity } from '../entities';
-import { DRIZZLE_PROVIDER, type DrizzleDB, rolesTable, usersTable } from '../infra';
+import { and, asc, count, desc, eq } from 'drizzle-orm';
+import {
+  OccurrenceStatusKey,
+  type AgentWorkloadReadModel,
+  UserEntity,
+} from '../entities';
+import {
+  assignmentsTable,
+  DRIZZLE_PROVIDER,
+  type DrizzleDB,
+  occurrencesTable,
+  occurrenceStatusesTable,
+  rolesTable,
+  usersTable,
+} from '../infra';
 import { RoleMapper, UserMapper } from '../mappers';
 
 @Injectable()
@@ -79,5 +91,51 @@ export class UsersRepository {
 
     const role = this.roleMapper.toDomainFromPersistence(result.role);
     return this.mapper.toDomainFromPersistence(result.user, role);
+  }
+
+  async findAgentsWithActiveTasks(): Promise<AgentWorkloadReadModel[]> {
+    const latestAssignments = this.db
+      .selectDistinctOn([assignmentsTable.occurrenceId], {
+        occurrenceId: assignmentsTable.occurrenceId,
+        agentId: assignmentsTable.agentId,
+      })
+      .from(assignmentsTable)
+      .orderBy(
+        assignmentsTable.occurrenceId,
+        desc(assignmentsTable.assignedAt),
+        desc(assignmentsTable.id),
+      )
+      .as('latest_assignments');
+    const activeTasksCount = count(occurrenceStatusesTable.id).mapWith(Number);
+
+    return this.db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        activeTasksCount,
+      })
+      .from(usersTable)
+      .innerJoin(rolesTable, eq(usersTable.roleId, rolesTable.id))
+      .leftJoin(latestAssignments, eq(usersTable.id, latestAssignments.agentId))
+      .leftJoin(
+        occurrencesTable,
+        and(
+          eq(latestAssignments.occurrenceId, occurrencesTable.id),
+          eq(occurrencesTable.isActive, true),
+        ),
+      )
+      .leftJoin(
+        occurrenceStatusesTable,
+        and(
+          eq(occurrencesTable.statusId, occurrenceStatusesTable.id),
+          eq(
+            occurrenceStatusesTable.key,
+            OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+          ),
+        ),
+      )
+      .where(and(eq(rolesTable.name, 'agent'), eq(usersTable.isActive, true)))
+      .groupBy(usersTable.id, usersTable.name)
+      .orderBy(asc(activeTasksCount), asc(usersTable.name));
   }
 }

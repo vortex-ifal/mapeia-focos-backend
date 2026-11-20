@@ -1,6 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreatedResponseDto, CreateUserDto } from '../dtos';
+import {
+  CreatedResponseDto,
+  CreateUserDto,
+} from '../dtos';
 import { UserMapper } from '../mappers';
 import { UserService } from '../services';
 
