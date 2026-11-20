@@ -12,7 +12,7 @@ import { AgentDashboardMapper, OccurrenceMapper, UserMapper } from '../mappers';
 import { OccurrenceService, UserService } from '../services';
 
 @ApiTags('Agents')
-@Controller()
+@Controller('agents')
 export class AgentController {
   constructor(
     private readonly occurrenceService: OccurrenceService,
@@ -22,7 +22,7 @@ export class AgentController {
     private readonly userMapper: UserMapper,
   ) {}
 
-  @Get('agents/occurrences')
+  @Get('occurrences')
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
     description:
@@ -62,7 +62,7 @@ export class AgentController {
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
   }
 
-  @Get('agents/dashboard')
+  @Get('dashboard')
   @ApiOperation({
     summary: 'Resumo diário do agente',
     description:
@@ -89,7 +89,7 @@ export class AgentController {
     return this.agentDashboardMapper.toDto(readModel);
   }
 
-  @Get('agents')
+  @Get()
   @ApiOperation({
     summary: 'Listar agentes e suas tarefas em andamento',
     description:
