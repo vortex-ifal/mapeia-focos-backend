@@ -1,7 +1,7 @@
 import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../common';
-import { DEV_USERS } from '../constants';
+import { CurrentUser, Roles } from '../common';
+import type { AuthenticatedUserPayload } from '../common';
 import {
   AgentDashboardResponseDto,
   AgentWorkloadResponseDto,
@@ -53,13 +53,14 @@ export class AgentController {
     description: 'O usuário informado não possui perfil de agente.',
   })
   async getWorklist(
+    @CurrentUser() user: AuthenticatedUserPayload,
     @Query() query: AgentWorklistQueryDto,
   ): Promise<OccurrenceResponseDto[]> {
     const filters: AgentWorklistFilters = {
       orderBy: query.orderBy,
     };
     const occurrences = await this.occurrenceService.findAssignedToAgent(
-      DEV_USERS.AGENT_ID,
+      user.sub,
       filters,
     );
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
@@ -86,9 +87,11 @@ export class AgentController {
     status: HttpStatus.CONFLICT,
     description: 'O usuário informado não possui perfil de agente.',
   })
-  async getDashboard(): Promise<AgentDashboardResponseDto> {
+  async getDashboard(
+    @CurrentUser() user: AuthenticatedUserPayload,
+  ): Promise<AgentDashboardResponseDto> {
     const readModel = await this.occurrenceService.getAgentDashboard(
-      DEV_USERS.AGENT_ID,
+      user.sub,
     );
     return this.agentDashboardMapper.toDto(readModel);
   }
