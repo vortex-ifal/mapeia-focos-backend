@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { RoleEntity, UserBuilder, UserEntity } from '../entities';
-import { CreatedResponseDto, CreateUserDto } from '../dtos';
+import {
+  RoleEntity,
+  UserBuilder,
+  UserEntity,
+  type AgentWorkloadReadModel,
+} from '../entities';
+import {
+  AgentWorkloadResponseDto,
+  CreatedResponseDto,
+  CreateUserDto,
+} from '../dtos';
 import { UserInsert, UserSelect } from '../infra';
 
 @Injectable()
@@ -18,6 +27,16 @@ export class UserMapper {
   toCreatedDto(id: string): CreatedResponseDto {
     return {
       id,
+    };
+  }
+
+  toAgentWorkloadDto(
+    readModel: AgentWorkloadReadModel,
+  ): AgentWorkloadResponseDto {
+    return {
+      id: readModel.id,
+      name: readModel.name,
+      activeTasksCount: readModel.activeTasksCount,
     };
   }
 
