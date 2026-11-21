@@ -13,7 +13,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { CurrentUser, Public, Roles } from '../common';
+import type { AuthenticatedUserPayload } from '../common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiExtraModels,
@@ -25,7 +28,6 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import { DEV_USERS } from '../constants';
 import { type ListOccurrencesFilters } from '../entities';
 import {
   AssignOccurrenceDto,
@@ -60,6 +62,8 @@ export class OccurrencesController {
   ) {}
 
   @Post()
+  @ApiBearerAuth()
+  @Roles('citizen', 'agent')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Registrar uma nova ocorrência ou foco de vetor',
@@ -77,17 +81,20 @@ export class OccurrencesController {
       'Dados da requisição inválidos (ex.: validações de campos ou coordenadas).',
   })
   async create(
+    @CurrentUser() user: AuthenticatedUserPayload,
     @Body() dto: CreateOccurrenceDto,
   ): Promise<CreateOccurrenceResponseDto> {
     const domainEntity = this.occurrenceMapper.toDomainFromDto(
       dto,
-      DEV_USERS.CITIZEN_ID,
+      user.sub,
     );
     const createdOccurrence = await this.occurrenceService.create(domainEntity);
     return this.occurrenceMapper.toCreateResponseDto(createdOccurrence);
   }
 
   @Get()
+  @ApiBearerAuth()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Listar ocorrências com paginação e filtros',
     description:
@@ -135,6 +142,7 @@ export class OccurrencesController {
   }
 
   @Get('protocol/:protocol')
+  @Public()
   @ApiOperation({
     summary: 'Consultar status de ocorrência por protocolo',
     description:
@@ -164,6 +172,7 @@ export class OccurrencesController {
   }
 
   @Get('heatmap')
+  @Public()
   @ApiOperation({
     summary: 'Coordenadas para mapa de calor de risco',
     description:
@@ -180,6 +189,8 @@ export class OccurrencesController {
   }
 
   @Get(':id/territorial-context')
+  @ApiBearerAuth()
+  @Roles('manager', 'agent')
   @ApiOperation({
     summary: 'Contexto territorial de uma ocorrência',
     description:
@@ -211,6 +222,8 @@ export class OccurrencesController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles('manager', 'agent', 'citizen')
   @ApiOperation({
     summary: 'Buscar detalhes de uma ocorrência por ID',
     description:
@@ -237,6 +250,8 @@ export class OccurrencesController {
   }
 
   @Post(':id/media')
+  @ApiBearerAuth()
+  @Roles('citizen', 'agent')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Fazer upload de mídias para uma ocorrência',
@@ -301,6 +316,8 @@ export class OccurrencesController {
   }
 
   @Patch(':id/status')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Atualizar status de uma ocorrência',
@@ -325,17 +342,20 @@ export class OccurrencesController {
     description: 'A ocorrência já se encontra com o status informado.',
   })
   async updateStatus(
+    @CurrentUser() user: AuthenticatedUserPayload,
     @Param() params: UuidParamDto,
     @Body() dto: UpdateOccurrenceStatusDto,
   ): Promise<void> {
     await this.occurrenceService.updateStatus(
       params.id,
       dto.statusKey,
-      DEV_USERS.MANAGER_ID,
+      user.sub,
     );
   }
 
   @Patch(':id/priority')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Definir prioridade de uma ocorrência',
@@ -361,17 +381,20 @@ export class OccurrencesController {
       'A prioridade só pode ser definida para ocorrências com status validado (accepted).',
   })
   async updatePriority(
+    @CurrentUser() user: AuthenticatedUserPayload,
     @Param() params: UuidParamDto,
     @Body() dto: UpdateOccurrencePriorityDto,
   ): Promise<void> {
     await this.occurrenceService.updatePriority(
       params.id,
       dto.priority,
-      DEV_USERS.MANAGER_ID,
+      user.sub,
     );
   }
 
   @Patch(':id/assign')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Despachar ocorrência para um agente',
@@ -397,17 +420,20 @@ export class OccurrencesController {
       'Apenas ocorrências com status validado (accepted) podem ser despachadas, ou o usuário informado não possui perfil de agente.',
   })
   async assign(
+    @CurrentUser() user: AuthenticatedUserPayload,
     @Param() params: UuidParamDto,
     @Body() dto: AssignOccurrenceDto,
   ): Promise<void> {
     await this.occurrenceService.assign(
       params.id,
       dto.agentId,
-      DEV_USERS.MANAGER_ID,
+      user.sub,
     );
   }
 
   @Get(':id/history')
+  @ApiBearerAuth()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Consultar linha do tempo de uma ocorrência',
     description:

@@ -7,3 +7,4 @@ export * from './role.mapper';
 export * from './assignment.mapper';
 export * from './occurrence-event.mapper';
 export * from './occurrence-history.mapper';
+export * from './auth.mapper';
