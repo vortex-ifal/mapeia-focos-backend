@@ -13,7 +13,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Public, Roles } from '../common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiExtraModels,
@@ -60,6 +62,8 @@ export class OccurrencesController {
   ) {}
 
   @Post()
+  @ApiBearerAuth()
+  @Roles('citizen', 'agent')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Registrar uma nova ocorrência ou foco de vetor',
@@ -88,6 +92,8 @@ export class OccurrencesController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Listar ocorrências com paginação e filtros',
     description:
@@ -135,6 +141,7 @@ export class OccurrencesController {
   }
 
   @Get('protocol/:protocol')
+  @Public()
   @ApiOperation({
     summary: 'Consultar status de ocorrência por protocolo',
     description:
@@ -164,6 +171,7 @@ export class OccurrencesController {
   }
 
   @Get('heatmap')
+  @Public()
   @ApiOperation({
     summary: 'Coordenadas para mapa de calor de risco',
     description:
@@ -180,6 +188,8 @@ export class OccurrencesController {
   }
 
   @Get(':id/territorial-context')
+  @ApiBearerAuth()
+  @Roles('manager', 'agent')
   @ApiOperation({
     summary: 'Contexto territorial de uma ocorrência',
     description:
@@ -211,6 +221,8 @@ export class OccurrencesController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles('manager', 'agent', 'citizen')
   @ApiOperation({
     summary: 'Buscar detalhes de uma ocorrência por ID',
     description:
@@ -237,6 +249,8 @@ export class OccurrencesController {
   }
 
   @Post(':id/media')
+  @ApiBearerAuth()
+  @Roles('citizen', 'agent')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Fazer upload de mídias para uma ocorrência',
@@ -301,6 +315,8 @@ export class OccurrencesController {
   }
 
   @Patch(':id/status')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Atualizar status de uma ocorrência',
@@ -336,6 +352,8 @@ export class OccurrencesController {
   }
 
   @Patch(':id/priority')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Definir prioridade de uma ocorrência',
@@ -372,6 +390,8 @@ export class OccurrencesController {
   }
 
   @Patch(':id/assign')
+  @ApiBearerAuth()
+  @Roles('manager')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Despachar ocorrência para um agente',
@@ -408,6 +428,8 @@ export class OccurrencesController {
   }
 
   @Get(':id/history')
+  @ApiBearerAuth()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Consultar linha do tempo de uma ocorrência',
     description:

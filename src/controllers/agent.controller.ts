@@ -1,5 +1,6 @@
 import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common';
 import { DEV_USERS } from '../constants';
 import {
   AgentDashboardResponseDto,
@@ -11,6 +12,7 @@ import { AgentDashboardMapper, OccurrenceMapper } from '../mappers';
 import { OccurrenceService } from '../services';
 
 @ApiTags('Agents')
+@ApiBearerAuth()
 @Controller('agents')
 export class AgentController {
   constructor(
@@ -20,6 +22,7 @@ export class AgentController {
   ) {}
 
   @Get('occurrences')
+  @Roles('agent')
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
     description:
@@ -60,6 +63,7 @@ export class AgentController {
   }
 
   @Get('dashboard')
+  @Roles('agent')
   @ApiOperation({
     summary: 'Resumo diário do agente',
     description:

@@ -28,8 +28,9 @@ async function bootstrap() {
       'API do backend do sistema Mapeia Focos para monitoramento, registro e controle de focos de vetores.',
     )
     .setVersion('0.1.0')
+    .addBearerAuth()
+    .addTag('Auth', 'Autenticação, emissão de tokens JWT e cadastro')
     .addTag('Occurrences', 'Registro e acompanhamento de ocorrências e focos')
-    .addTag('Users', 'Gerenciamento e cadastro de usuários')
     .addTag('Agents', 'Dashboard e recursos do módulo do agente de endemias')
     .build();
 
