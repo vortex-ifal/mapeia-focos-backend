@@ -94,6 +94,7 @@ export class AgentController {
   }
 
   @Get()
+  @Roles('manager')
   @ApiOperation({
     summary: 'Listar agentes e suas tarefas em andamento',
     description:
