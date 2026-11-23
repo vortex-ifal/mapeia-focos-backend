@@ -16,7 +16,6 @@ import {
   CreatedResponseDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
-  AgentOccurrenceDetailResponseDto,
   HeatmapResponseDto,
   NearbyOccurrenceDto,
   OccurrenceDetailResponseDto,
@@ -219,29 +218,6 @@ export class OccurrenceMapper {
         : null,
       media: readModel.occurrence.media.map((item) =>
         this.mediaMapper.toResponseDto(item),
-      ),
-    };
-  }
-
-  toAgentDetailsDto(
-    readModel: OccurrenceDetailReadModel,
-  ): AgentOccurrenceDetailResponseDto {
-    const occurrence = this.toDto(readModel.occurrence);
-
-    return {
-      id: occurrence.id,
-      protocol: occurrence.protocol,
-      address: occurrence.address,
-      description: occurrence.description,
-      situationType: occurrence.situationType,
-      latitude: occurrence.latitude,
-      longitude: occurrence.longitude,
-      createdAt: occurrence.createdAt,
-      updatedAt: occurrence.updatedAt,
-      status: occurrence.status,
-      priority: occurrence.priority,
-      media: readModel.occurrence.media.map((item) =>
-        this.mediaMapper.toAgentOccurrenceResponseDto(item),
       ),
     };
   }
