@@ -1,12 +1,20 @@
-import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, Roles } from '../common';
 import type { AuthenticatedUserPayload } from '../common';
 import {
   AgentDashboardResponseDto,
+  AgentOccurrenceDetailResponseDto,
   AgentWorkloadResponseDto,
   AgentWorklistQueryDto,
   OccurrenceResponseDto,
+  UuidParamDto,
 } from '../dtos';
 import type { AgentWorklistFilters } from '../entities';
 import { AgentDashboardMapper, OccurrenceMapper, UserMapper } from '../mappers';
@@ -14,7 +22,7 @@ import { OccurrenceService, UserService } from '../services';
 
 @ApiTags('Agents')
 @ApiBearerAuth()
-@Controller('agents')
+@Controller()
 export class AgentController {
   constructor(
     private readonly occurrenceService: OccurrenceService,
@@ -24,7 +32,7 @@ export class AgentController {
     private readonly userMapper: UserMapper,
   ) {}
 
-  @Get('occurrences')
+  @Get('agents/occurrences')
   @Roles('agent')
   @ApiOperation({
     summary: 'Lista de trabalho do agente',
@@ -66,7 +74,7 @@ export class AgentController {
     return occurrences.map((occ) => this.occurrenceMapper.toDto(occ));
   }
 
-  @Get('dashboard')
+  @Get('agents/dashboard')
   @Roles('agent')
   @ApiOperation({
     summary: 'Resumo diário do agente',
@@ -96,7 +104,7 @@ export class AgentController {
     return this.agentDashboardMapper.toDto(readModel);
   }
 
-  @Get()
+  @Get('agents')
   @Roles('manager')
   @ApiOperation({
     summary: 'Listar agentes e suas tarefas em andamento',
@@ -112,5 +120,40 @@ export class AgentController {
   async findAgentsWithActiveTasks(): Promise<AgentWorkloadResponseDto[]> {
     const agents = await this.userService.findAgentsWithActiveTasks();
     return agents.map((agent) => this.userMapper.toAgentWorkloadDto(agent));
+  }
+
+  @Get('agent/occurrences/:id')
+  @Roles('agent')
+  @ApiOperation({
+    summary: 'Consultar detalhes de uma ocorrência atribuída ao agente',
+    description:
+      'Retorna os detalhes e as mídias da ocorrência somente quando sua atribuição vigente pertence ao agente autenticado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Detalhes da ocorrência recuperados com sucesso.',
+    type: AgentOccurrenceDetailResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'O identificador da ocorrência informado não é um UUID válido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Você não tem permissão para acessar esta ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  async getAssignedOccurrenceDetails(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+  ): Promise<AgentOccurrenceDetailResponseDto> {
+    const details = await this.occurrenceService.findDetailsForAgent(
+      params.id,
+      user.sub,
+    );
+    return this.occurrenceMapper.toAgentDetailsDto(details);
   }
 }

@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { MediaBuilder, MediaEntity, MediaType } from '../entities';
-import { MediaResponseDto, UploadMediaResponseDto } from '../dtos';
+import {
+  AgentOccurrenceMediaResponseDto,
+  MediaResponseDto,
+  UploadMediaResponseDto,
+} from '../dtos';
 import { MediaInsert, MediaSelect } from '../infra';
 
 @Injectable()
@@ -55,6 +59,20 @@ export class MediaMapper {
       id: entity.id,
       url: entity.url ?? '',
       type: entity.type,
+    };
+  }
+
+  toAgentOccurrenceResponseDto(
+    entity: MediaEntity,
+  ): AgentOccurrenceMediaResponseDto {
+    const response = this.toResponseDto(entity);
+
+    return {
+      id: response.id,
+      url: response.url,
+      type: response.type,
+      mimeType: entity.mimeType,
+      fileSizeBytes: entity.fileSizeBytes,
     };
   }
 }

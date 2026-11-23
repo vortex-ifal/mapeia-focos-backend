@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -110,6 +111,28 @@ export class OccurrenceService {
     }
 
     if (detail.occurrence.media && detail.occurrence.media.length > 0) {
+      await this.mediaService.signMediaList(detail.occurrence.media);
+    }
+
+    return detail;
+  }
+
+  async findDetailsForAgent(
+    id: string,
+    agentId: string,
+  ): Promise<OccurrenceDetailReadModel> {
+    const detail = await this.occurrencesRepository.findDetailsById(id);
+    if (!detail) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (detail.assignedAgent?.id !== agentId) {
+      throw new ForbiddenException(
+        'Você não tem permissão para acessar esta ocorrência',
+      );
+    }
+
+    if (detail.occurrence.media.length > 0) {
       await this.mediaService.signMediaList(detail.occurrence.media);
     }
 
