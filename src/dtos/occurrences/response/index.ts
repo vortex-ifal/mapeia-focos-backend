@@ -1,3 +1,4 @@
+export * from './agent-occurrence-detail-response.dto';
 export * from './agent-dashboard-response.dto';
 export * from './assigned-agent-response.dto';
 export * from './create-occurrence-response.dto';
