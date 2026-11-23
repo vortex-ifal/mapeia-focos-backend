@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AgentController, OccurrencesController } from '../controllers';
+import {
+  AgentController,
+  ManagementOccurrencesController,
+  OccurrencesController,
+} from '../controllers';
 import {
   AgentDashboardMapper,
   AssignmentMapper,
@@ -21,7 +25,11 @@ import { UsersModule } from './users.module';
 
 @Module({
   imports: [UsersModule],
-  controllers: [OccurrencesController, AgentController],
+  controllers: [
+    OccurrencesController,
+    AgentController,
+    ManagementOccurrencesController,
+  ],
   providers: [
     OccurrenceService,
     OccurrencesRepository,

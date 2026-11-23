@@ -41,6 +41,7 @@ erDiagram
         uuid status_id FK
         enum priority "low | medium | high"
         boolean is_active
+        timestamp archived_at
         uuid user_id FK
         uuid location_id FK
         uuid property_id FK
@@ -185,6 +186,7 @@ erDiagram
 | Status de ocorrência | Tabela `OCCURRENCE_STATUS` relacional com `key` única em inglês (`registered`, `under_review`, `rejected`, `accepted`, `forwarded_for_inspection`, `resolved`) e `name` descritivo |
 | Prioridade de ocorrência | Coluna `priority` na tabela `OCCURRENCE` com tipo ENUM nativo (`low`, `medium`, `high`), preenchida pelo gestor após a validação da ocorrência |
 | Código de protocolo | Coluna `protocol` única (`varchar(5)`) gerada exclusivamente pelo backend para consulta pública sem autenticação |
+| Arquivamento administrativo | Coluna nullable `archived_at` na tabela `OCCURRENCE`, separada do fluxo de status e de `is_active` |
 | Imóvel | Entidade `PROPERTY` separada (suporta histórico futuro — RF17) |
 | Vistoria | Entidade `INSPECTION` própria com resultado e pendência |
 | Status | Entidade/tabela `STATUS_HISTORY` para auditoria de mudanças com chave primária composta `(occurrence_id, changed_at)`, vinculando `previous_status_id` e `new_status_id` a `OCCURRENCE_STATUS` |
