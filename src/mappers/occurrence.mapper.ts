@@ -134,6 +134,7 @@ export class OccurrenceMapper {
       .withSituationType(row.situationType)
       .withCoordinates(row.latitude, row.longitude)
       .withPriority(row.priority as OccurrencePriority | null)
+      .withArchivedAt(row.archivedAt)
       .withUserId(row.userId)
       .withCreatedAt(row.createdAt)
       .withUpdatedAt(row.updatedAt);
@@ -210,6 +211,8 @@ export class OccurrenceMapper {
       updatedAt: baseDto.updatedAt,
       status: baseDto.status,
       priority: baseDto.priority,
+      isArchived: baseDto.isArchived,
+      archivedAt: baseDto.archivedAt,
       assignedAgent: readModel.assignedAgent
         ? {
             id: readModel.assignedAgent.id,
@@ -238,6 +241,8 @@ export class OccurrenceMapper {
         name: entity.status?.name ?? '',
       },
       priority: entity.priority ?? null,
+      isArchived: entity.archivedAt !== null,
+      archivedAt: entity.archivedAt?.toISOString() ?? null,
     };
   }
 

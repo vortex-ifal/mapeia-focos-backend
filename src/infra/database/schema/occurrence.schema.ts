@@ -37,6 +37,7 @@ export const occurrencesTable = pgTable(
       .notNull(),
     priority: occurrencePriorityEnum('priority'),
     isActive: boolean('is_active').default(true).notNull(),
+    archivedAt: timestamp('archived_at'),
     userId: uuid('user_id')
       .references(() => usersTable.id, {
         onDelete: 'restrict',

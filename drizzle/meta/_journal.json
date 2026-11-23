@@ -43,6 +43,20 @@
       "when": 1795027315838,
       "tag": "20261118184155_create_occurrence_events_and_history_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795470944416,
+      "tag": "20261123215544_add_archived_at_to_occurrences",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795471133193,
+      "tag": "20261123215853_add_occurrence_archive_events",
+      "breakpoints": true
     }
   ]
 }
