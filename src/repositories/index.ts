@@ -4,4 +4,5 @@ export * from './media.repository';
 export * from './users.repository';
 export * from './roles.repository';
 export * from './assignments.repository';
+export * from './inspections.repository';
 export * from './occurrence-events.repository';

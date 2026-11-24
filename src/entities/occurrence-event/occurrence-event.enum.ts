@@ -5,4 +5,5 @@ export enum OccurrenceEventKey {
   AGENT_ASSIGNED = 'agent_assigned',
   OCCURRENCE_ARCHIVED = 'occurrence_archived',
   OCCURRENCE_RESTORED = 'occurrence_restored',
+  INSPECTION_PERFORMED = 'inspection_performed',
 }

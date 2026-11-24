@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { AssignmentEntity, OccurrenceHistoryEntity } from '../entities';
 import {
   assignmentsTable,
@@ -64,5 +64,22 @@ export class AssignmentsRepository {
 
       return true;
     });
+  }
+
+  async findLatestByOccurrenceId(
+    occurrenceId: string,
+  ): Promise<AssignmentEntity | null> {
+    const [row] = await this.db
+      .select()
+      .from(assignmentsTable)
+      .where(eq(assignmentsTable.occurrenceId, occurrenceId))
+      .orderBy(desc(assignmentsTable.assignedAt), desc(assignmentsTable.id))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return this.mapper.toDomainFromPersistence(row);
   }
 }
