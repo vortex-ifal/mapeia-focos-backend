@@ -8,10 +8,10 @@ import {
 } from '@nestjs/common';
 import {
   AssignmentBuilder,
-  createPaginationReadModel,
-  OccurrenceEntity,
   OccurrenceEventKey,
   OccurrenceHistoryBuilder,
+  createPaginationReadModel,
+  OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
   type AgentDashboardReadModel,
@@ -231,6 +231,90 @@ export class OccurrenceService {
       throw new InternalServerErrorException(
         'Falha ao atualizar a prioridade da ocorrência',
       );
+    }
+  }
+
+  async archive(id: string, userId: string): Promise<void> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (occurrence.archivedAt) {
+      throw new ConflictException('A ocorrência já está arquivada');
+    }
+
+    if (occurrence.status?.key === OccurrenceStatusKey.RESOLVED) {
+      throw new ConflictException(
+        'Não é permitido arquivar uma ocorrência resolvida',
+      );
+    }
+
+    const expectedStatusId = occurrence.status?.id;
+    if (!expectedStatusId) {
+      throw new InternalServerErrorException(
+        'Status atual da ocorrência não identificado no sistema',
+      );
+    }
+
+    const archiveEvent = await this.occurrenceEventsRepository.findByKey(
+      OccurrenceEventKey.OCCURRENCE_ARCHIVED,
+    );
+    if (!archiveEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento "occurrence_archived" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(id)
+      .withEventId(archiveEvent.id)
+      .withUserId(userId)
+      .build();
+    const archivedAt = new Date();
+    const archived = await this.occurrencesRepository.archiveWithHistory(
+      id,
+      expectedStatusId,
+      archivedAt,
+      historyEntity,
+    );
+
+    if (!archived) {
+      throw new ConflictException('A ocorrência não pôde ser arquivada');
+    }
+  }
+
+  async restore(id: string, userId: string): Promise<void> {
+    const occurrence = await this.occurrencesRepository.findById(id);
+    if (!occurrence) {
+      throw new NotFoundException('Ocorrência não encontrada no sistema');
+    }
+
+    if (!occurrence.archivedAt) {
+      throw new ConflictException('A ocorrência não está arquivada');
+    }
+
+    const restoreEvent = await this.occurrenceEventsRepository.findByKey(
+      OccurrenceEventKey.OCCURRENCE_RESTORED,
+    );
+    if (!restoreEvent?.id) {
+      throw new InternalServerErrorException(
+        'Evento "occurrence_restored" não encontrado no sistema',
+      );
+    }
+
+    const historyEntity = OccurrenceHistoryBuilder.create()
+      .withOccurrenceId(id)
+      .withEventId(restoreEvent.id)
+      .withUserId(userId)
+      .build();
+    const restored = await this.occurrencesRepository.restoreWithHistory(
+      id,
+      historyEntity,
+    );
+
+    if (!restored) {
+      throw new ConflictException('A ocorrência não pôde ser restaurada');
     }
   }
 

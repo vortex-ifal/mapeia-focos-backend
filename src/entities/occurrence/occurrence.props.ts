@@ -12,6 +12,7 @@ export interface OccurrenceProps {
   longitude?: number | null;
   status?: OccurrenceStatusEntity;
   priority?: OccurrencePriority | null;
+  archivedAt?: Date | null;
   userId: string;
   media?: MediaEntity[];
   createdAt?: Date;

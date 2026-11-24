@@ -62,6 +62,11 @@ export class OccurrenceBuilder {
     return this;
   }
 
+  withArchivedAt(archivedAt?: Date | null): this {
+    this.props.archivedAt = archivedAt;
+    return this;
+  }
+
   withMedia(media?: MediaEntity[]): this {
     this.props.media = media;
     return this;

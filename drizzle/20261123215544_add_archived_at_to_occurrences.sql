@@ -1,0 +1,1 @@
+ALTER TABLE "occurrences" ADD COLUMN "archived_at" timestamp;

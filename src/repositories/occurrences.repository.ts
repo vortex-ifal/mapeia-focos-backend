@@ -9,6 +9,7 @@ import {
   ilike,
   inArray,
   isNotNull,
+  isNull,
   lte,
   ne,
   sql,
@@ -312,6 +313,67 @@ export class OccurrencesRepository {
       .returning({ id: occurrencesTable.id });
 
     return !!updated;
+  }
+
+  async archiveWithHistory(
+    id: string,
+    expectedStatusId: string,
+    archivedAt: Date,
+    historyEntity: OccurrenceHistoryEntity,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({ archivedAt, updatedAt: archivedAt })
+        .where(
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, expectedStatusId),
+            isNull(occurrencesTable.archivedAt),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx
+        .insert(occurrenceHistoryTable)
+        .values(this.historyMapper.toPersistence(historyEntity));
+
+      return true;
+    });
+  }
+
+  async restoreWithHistory(
+    id: string,
+    historyEntity: OccurrenceHistoryEntity,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({ archivedAt: null, updatedAt: new Date() })
+        .where(
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            isNotNull(occurrencesTable.archivedAt),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx
+        .insert(occurrenceHistoryTable)
+        .values(this.historyMapper.toPersistence(historyEntity));
+
+      return true;
+    });
   }
 
   async findAll(
