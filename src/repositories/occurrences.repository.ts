@@ -20,6 +20,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  PRIORITIZABLE_OCCURRENCE_STATUSES,
   OccurrenceHistoryEntity,
   type AgentDashboardReadModel,
   type AgentWorklistFilters,
@@ -201,16 +202,18 @@ export class OccurrencesRepository {
     historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           statusId: newStatusId,
-          updatedAt: new Date(),
+          updatedAt: operationAt,
         })
         .where(
           and(
             eq(occurrencesTable.id, occurrenceId),
             eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, previousStatusId),
           ),
         )
         .returning({ id: occurrencesTable.id });
@@ -238,18 +241,36 @@ export class OccurrencesRepository {
 
   async updatePriority(
     id: string,
+    expectedStatusId: string,
     priority: OccurrencePriority,
     historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           priority,
-          updatedAt: new Date(),
+          updatedAt: operationAt,
         })
         .where(
-          and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, expectedStatusId),
+            inArray(
+              occurrencesTable.statusId,
+              tx
+                .select({ id: occurrenceStatusesTable.id })
+                .from(occurrenceStatusesTable)
+                .where(
+                  inArray(
+                    occurrenceStatusesTable.key,
+                    PRIORITIZABLE_OCCURRENCE_STATUSES,
+                  ),
+                ),
+            ),
+          ),
         )
         .returning({ id: occurrencesTable.id });
 
@@ -301,11 +322,12 @@ export class OccurrencesRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
+    const operationAt = new Date();
     const [updated] = await this.db
       .update(occurrencesTable)
       .set({
         isActive: false,
-        updatedAt: new Date(),
+        updatedAt: operationAt,
       })
       .where(
         and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
@@ -318,13 +340,13 @@ export class OccurrencesRepository {
   async archiveWithHistory(
     id: string,
     expectedStatusId: string,
-    archivedAt: Date,
     historyEntity: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
-        .set({ archivedAt, updatedAt: archivedAt })
+        .set({ archivedAt: operationAt, updatedAt: operationAt })
         .where(
           and(
             eq(occurrencesTable.id, id),
@@ -352,9 +374,10 @@ export class OccurrencesRepository {
     historyEntity: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
-        .set({ archivedAt: null, updatedAt: new Date() })
+        .set({ archivedAt: null, updatedAt: operationAt })
         .where(
           and(
             eq(occurrencesTable.id, id),

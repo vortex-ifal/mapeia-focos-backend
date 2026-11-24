@@ -8,6 +8,9 @@ import {
 } from '@nestjs/common';
 import {
   AssignmentBuilder,
+  isFrozenOccurrenceStatus,
+  isOccurrenceStatusTransitionAllowed,
+  isPriorityAllowedForOccurrenceStatus,
   OccurrenceEventKey,
   OccurrenceHistoryBuilder,
   createPaginationReadModel,
@@ -137,6 +140,13 @@ export class OccurrenceService {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
 
+    const currentStatusKey = occurrence.status?.key;
+    if (isFrozenOccurrenceStatus(currentStatusKey)) {
+      throw new UnprocessableEntityException(
+        'Ocorrências rejeitadas ou resolvidas não aceitam novas ações',
+      );
+    }
+
     const previousStatusId = occurrence.status?.id;
     if (!previousStatusId) {
       throw new InternalServerErrorException(
@@ -155,6 +165,14 @@ export class OccurrenceService {
     if (previousStatusId === newStatus.id) {
       throw new ConflictException(
         'A ocorrência já se encontra com o status informado',
+      );
+    }
+
+    if (
+      !isOccurrenceStatusTransitionAllowed(currentStatusKey, newStatus.key)
+    ) {
+      throw new UnprocessableEntityException(
+        `A transição de "${currentStatusKey}" para "${newStatus.key}" não é permitida`,
       );
     }
 
@@ -183,8 +201,8 @@ export class OccurrenceService {
     );
 
     if (!updated) {
-      throw new InternalServerErrorException(
-        'Falha ao atualizar o status da ocorrência',
+      throw new ConflictException(
+        'O status da ocorrência foi alterado durante a requisição',
       );
     }
   }
@@ -199,9 +217,23 @@ export class OccurrenceService {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
 
-    if (occurrence.status?.key !== OccurrenceStatusKey.ACCEPTED) {
-      throw new ConflictException(
-        'A prioridade só pode ser definida para ocorrências com status validado (accepted)',
+    const currentStatusKey = occurrence.status?.key;
+    if (isFrozenOccurrenceStatus(currentStatusKey)) {
+      throw new UnprocessableEntityException(
+        'Ocorrências rejeitadas ou resolvidas não aceitam novas ações',
+      );
+    }
+
+    if (!isPriorityAllowedForOccurrenceStatus(currentStatusKey)) {
+      throw new UnprocessableEntityException(
+        'A ocorrência precisa ser validada antes de definir a prioridade',
+      );
+    }
+
+    const expectedStatusId = occurrence.status?.id;
+    if (!expectedStatusId) {
+      throw new InternalServerErrorException(
+        'Status atual da ocorrência não identificado no sistema',
       );
     }
 
@@ -223,13 +255,14 @@ export class OccurrenceService {
 
     const updated = await this.occurrencesRepository.updatePriority(
       id,
+      expectedStatusId,
       priority,
       historyEntity,
     );
 
     if (!updated) {
-      throw new InternalServerErrorException(
-        'Falha ao atualizar a prioridade da ocorrência',
+      throw new ConflictException(
+        'O status da ocorrência mudou durante a atualização da prioridade',
       );
     }
   }
@@ -271,11 +304,9 @@ export class OccurrenceService {
       .withEventId(archiveEvent.id)
       .withUserId(userId)
       .build();
-    const archivedAt = new Date();
     const archived = await this.occurrencesRepository.archiveWithHistory(
       id,
       expectedStatusId,
-      archivedAt,
       historyEntity,
     );
 
@@ -328,13 +359,32 @@ export class OccurrenceService {
       throw new NotFoundException('Ocorrência não encontrada no sistema');
     }
 
-    if (occurrence.status?.key !== OccurrenceStatusKey.ACCEPTED) {
-      throw new ConflictException(
-        'Apenas ocorrências com status validado (accepted) podem ser despachadas',
+    const currentStatusKey = occurrence.status?.key;
+    if (isFrozenOccurrenceStatus(currentStatusKey)) {
+      throw new UnprocessableEntityException(
+        'Ocorrências rejeitadas ou resolvidas não aceitam novas ações',
       );
     }
 
-    const previousStatusId = occurrence.status.id;
+    if (
+      !isOccurrenceStatusTransitionAllowed(
+        currentStatusKey,
+        OccurrenceStatusKey.FORWARDED_FOR_INSPECTION,
+        'assignment',
+      )
+    ) {
+      throw new UnprocessableEntityException(
+        'Somente ocorrências validadas podem ser despachadas para um agente',
+      );
+    }
+
+    if (occurrence.priority == null) {
+      throw new UnprocessableEntityException(
+        'Para atribuir um agente é preciso definir a prioridade da ocorrência',
+      );
+    }
+
+    const previousStatusId = occurrence.status?.id;
     if (!previousStatusId) {
       throw new InternalServerErrorException(
         'Status atual da ocorrência não identificado no sistema',
@@ -391,8 +441,8 @@ export class OccurrenceService {
     );
 
     if (!success) {
-      throw new InternalServerErrorException(
-        'Falha ao despachar a ocorrência para o agente',
+      throw new ConflictException(
+        'A ocorrência mudou durante a atribuição do agente',
       );
     }
   }
