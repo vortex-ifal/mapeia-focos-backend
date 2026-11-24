@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { AssignmentEntity, OccurrenceHistoryEntity } from '../entities';
 import {
   assignmentsTable,
@@ -29,18 +29,19 @@ export class AssignmentsRepository {
     const data = this.mapper.toPersistence(entity);
 
     return this.db.transaction(async (tx) => {
-      await tx.insert(assignmentsTable).values(data);
-
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           statusId: newStatusId,
-          updatedAt: new Date(),
+          updatedAt: operationAt,
         })
         .where(
           and(
             eq(occurrencesTable.id, entity.occurrenceId),
             eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, previousStatusId),
+            isNotNull(occurrencesTable.priority),
           ),
         )
         .returning({ id: occurrencesTable.id });
@@ -48,6 +49,10 @@ export class AssignmentsRepository {
       if (!updated) {
         return false;
       }
+
+      await tx
+        .insert(assignmentsTable)
+        .values({ ...data, assignedAt: operationAt });
 
       await tx.insert(statusHistoriesTable).values({
         occurrenceId: entity.occurrenceId,

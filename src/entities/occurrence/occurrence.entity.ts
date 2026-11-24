@@ -13,6 +13,7 @@ export class OccurrenceEntity {
   private readonly _longitude: number | null;
   private _status?: OccurrenceStatusEntity;
   private _priority?: OccurrencePriority | null;
+  private readonly _archivedAt: Date | null;
   private _userId: string;
   private _media?: MediaEntity[];
   private readonly _createdAt?: Date;
@@ -28,6 +29,7 @@ export class OccurrenceEntity {
     this._longitude = props.longitude ?? null;
     this._status = props.status;
     this._priority = props.priority ?? null;
+    this._archivedAt = props.archivedAt ?? null;
     this._userId = props.userId;
     this._media = props.media ?? [];
     this._createdAt = props.createdAt;
@@ -80,6 +82,10 @@ export class OccurrenceEntity {
 
   set priority(priority: OccurrencePriority | null | undefined) {
     this._priority = priority;
+  }
+
+  get archivedAt(): Date | null {
+    return this._archivedAt;
   }
 
   get userId(): string {

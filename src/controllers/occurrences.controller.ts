@@ -322,7 +322,7 @@ export class OccurrencesController {
   @ApiOperation({
     summary: 'Atualizar status de uma ocorrência',
     description:
-      'Atualiza o status de uma ocorrência ativa para qualquer status válido no sistema.',
+      'Atualiza o status de uma ocorrência ativa conforme as transições permitidas pelo fluxo.',
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -339,7 +339,13 @@ export class OccurrencesController {
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: 'A ocorrência já se encontra com o status informado.',
+    description:
+      'A ocorrência já se encontra com o status informado ou mudou durante a atualização.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description:
+      'A ocorrência está congelada ou a transição de status não é permitida.',
   })
   async updateStatus(
     @CurrentUser() user: AuthenticatedUserPayload,
@@ -351,6 +357,71 @@ export class OccurrencesController {
       dto.statusKey,
       user.sub,
     );
+  }
+
+  @Patch(':id/archive')
+  @ApiBearerAuth()
+  @Roles('manager')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Arquivar uma ocorrência',
+    description:
+      'Arquiva administrativamente uma ocorrência não resolvida, sem alterar seu status.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Ocorrência arquivada com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'O identificador da ocorrência informado não é um UUID válido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'A ocorrência já está arquivada ou está resolvida e não pode ser arquivada.',
+  })
+  async archive(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+  ): Promise<void> {
+    await this.occurrenceService.archive(params.id, user.sub);
+  }
+
+  @Patch(':id/restore')
+  @ApiBearerAuth()
+  @Roles('manager')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Restaurar uma ocorrência arquivada',
+    description:
+      'Remove o arquivamento administrativo, mantendo o status atual da ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Ocorrência restaurada com sucesso.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'O identificador da ocorrência informado não é um UUID válido.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'A ocorrência não está arquivada.',
+  })
+  async restore(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+  ): Promise<void> {
+    await this.occurrenceService.restore(params.id, user.sub);
   }
 
   @Patch(':id/priority')
@@ -378,7 +449,12 @@ export class OccurrencesController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'A prioridade só pode ser definida para ocorrências com status validado (accepted).',
+      'O status da ocorrência mudou durante a atualização da prioridade.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description:
+      'A ocorrência precisa estar validada ou em vistoria, e não pode estar congelada.',
   })
   async updatePriority(
     @CurrentUser() user: AuthenticatedUserPayload,
@@ -399,7 +475,7 @@ export class OccurrencesController {
   @ApiOperation({
     summary: 'Despachar ocorrência para um agente',
     description:
-      'Associa um agente à ocorrência validada (accepted), atualizando seu status para "forwarded_for_inspection" e registrando o despacho no histórico.',
+      'Associa um agente a uma ocorrência validada com prioridade, atualiza seu status para "forwarded_for_inspection" e registra o despacho no histórico.',
   })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -417,7 +493,12 @@ export class OccurrencesController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Apenas ocorrências com status validado (accepted) podem ser despachadas, ou o usuário informado não possui perfil de agente.',
+      'A ocorrência mudou durante a atribuição ou o usuário informado não possui perfil de agente.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description:
+      'A ocorrência deve estar validada, ter prioridade definida e não pode estar congelada.',
   })
   async assign(
     @CurrentUser() user: AuthenticatedUserPayload,

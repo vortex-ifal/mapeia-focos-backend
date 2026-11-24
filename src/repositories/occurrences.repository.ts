@@ -9,6 +9,7 @@ import {
   ilike,
   inArray,
   isNotNull,
+  isNull,
   lte,
   ne,
   sql,
@@ -19,6 +20,7 @@ import {
   OccurrenceEntity,
   OccurrencePriority,
   OccurrenceStatusKey,
+  PRIORITIZABLE_OCCURRENCE_STATUSES,
   OccurrenceHistoryEntity,
   type AgentDashboardReadModel,
   type AgentWorklistFilters,
@@ -200,16 +202,18 @@ export class OccurrencesRepository {
     historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           statusId: newStatusId,
-          updatedAt: new Date(),
+          updatedAt: operationAt,
         })
         .where(
           and(
             eq(occurrencesTable.id, occurrenceId),
             eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, previousStatusId),
           ),
         )
         .returning({ id: occurrencesTable.id });
@@ -237,18 +241,36 @@ export class OccurrencesRepository {
 
   async updatePriority(
     id: string,
+    expectedStatusId: string,
     priority: OccurrencePriority,
     historyEntity?: OccurrenceHistoryEntity,
   ): Promise<boolean> {
     return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
       const [updated] = await tx
         .update(occurrencesTable)
         .set({
           priority,
-          updatedAt: new Date(),
+          updatedAt: operationAt,
         })
         .where(
-          and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, expectedStatusId),
+            inArray(
+              occurrencesTable.statusId,
+              tx
+                .select({ id: occurrenceStatusesTable.id })
+                .from(occurrenceStatusesTable)
+                .where(
+                  inArray(
+                    occurrenceStatusesTable.key,
+                    PRIORITIZABLE_OCCURRENCE_STATUSES,
+                  ),
+                ),
+            ),
+          ),
         )
         .returning({ id: occurrencesTable.id });
 
@@ -300,11 +322,12 @@ export class OccurrencesRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
+    const operationAt = new Date();
     const [updated] = await this.db
       .update(occurrencesTable)
       .set({
         isActive: false,
-        updatedAt: new Date(),
+        updatedAt: operationAt,
       })
       .where(
         and(eq(occurrencesTable.id, id), eq(occurrencesTable.isActive, true)),
@@ -312,6 +335,68 @@ export class OccurrencesRepository {
       .returning({ id: occurrencesTable.id });
 
     return !!updated;
+  }
+
+  async archiveWithHistory(
+    id: string,
+    expectedStatusId: string,
+    historyEntity: OccurrenceHistoryEntity,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({ archivedAt: operationAt, updatedAt: operationAt })
+        .where(
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            eq(occurrencesTable.statusId, expectedStatusId),
+            isNull(occurrencesTable.archivedAt),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx
+        .insert(occurrenceHistoryTable)
+        .values(this.historyMapper.toPersistence(historyEntity));
+
+      return true;
+    });
+  }
+
+  async restoreWithHistory(
+    id: string,
+    historyEntity: OccurrenceHistoryEntity,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const operationAt = new Date();
+      const [updated] = await tx
+        .update(occurrencesTable)
+        .set({ archivedAt: null, updatedAt: operationAt })
+        .where(
+          and(
+            eq(occurrencesTable.id, id),
+            eq(occurrencesTable.isActive, true),
+            isNotNull(occurrencesTable.archivedAt),
+          ),
+        )
+        .returning({ id: occurrencesTable.id });
+
+      if (!updated) {
+        return false;
+      }
+
+      await tx
+        .insert(occurrenceHistoryTable)
+        .values(this.historyMapper.toPersistence(historyEntity));
+
+      return true;
+    });
   }
 
   async findAll(

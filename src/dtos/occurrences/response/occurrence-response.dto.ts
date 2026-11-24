@@ -73,4 +73,17 @@ export class OccurrenceResponseDto {
     example: OccurrencePriority.HIGH,
   })
   priority: OccurrencePriority | null;
+
+  @ApiProperty({
+    description: 'Indica se a ocorrência está arquivada administrativamente',
+    example: false,
+  })
+  isArchived: boolean;
+
+  @ApiProperty({
+    description: 'Data e hora do arquivamento em formato ISO 8601, ou null',
+    nullable: true,
+    example: null,
+  })
+  archivedAt: string | null;
 }
