@@ -24,6 +24,16 @@ export const SEED_OCCURRENCE_EVENTS = {
     key: OccurrenceEventKey.AGENT_ASSIGNED,
     description: 'Agente responsável atribuído à ocorrência',
   },
+  OCCURRENCE_ARCHIVED: {
+    id: '01a1478e-1c4a-7999-8005-d10ebf63fc05',
+    key: OccurrenceEventKey.OCCURRENCE_ARCHIVED,
+    description: 'Ocorrência arquivada pela gestão',
+  },
+  OCCURRENCE_RESTORED: {
+    id: '01a1478e-1c4a-7999-8006-d10ebf63fc06',
+    key: OccurrenceEventKey.OCCURRENCE_RESTORED,
+    description: 'Ocorrência restaurada pela gestão',
+  },
 } as const;
 
 export async function seedOccurrenceEvents(
