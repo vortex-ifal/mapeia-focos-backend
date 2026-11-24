@@ -107,11 +107,12 @@ erDiagram
         uuid id PK
         uuid occurrence_id FK
         uuid agent_id FK
-        enum result "focus_eliminated | larvicide_applied | property_closed | resident_refused | abandoned_property"
+        enum status "draft | completed"
+        string condition
+        string actions_taken
         string notes
-        boolean pending_return
+        enum result "focus_eliminated | larvicide_applied | property_closed | resident_refused | abandoned_property"
         timestamp inspected_at
-        timestamp created_at
     }
 
     STATUS_HISTORY["STATUS_HISTORY (Histórico de Status)"] {

@@ -50,6 +50,13 @@
       "when": 1795470944416,
       "tag": "20261123215544_add_archived_at_to_occurrences",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795551266658,
+      "tag": "20261124201426_create_inspections_table",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import { AgentController, OccurrencesController } from '../controllers';
 import {
   AgentDashboardMapper,
   AssignmentMapper,
+  InspectionMapper,
   MediaMapper,
   OccurrenceEventMapper,
   OccurrenceHistoryMapper,
@@ -11,12 +12,13 @@ import {
 } from '../mappers';
 import {
   AssignmentsRepository,
+  InspectionsRepository,
   MediaRepository,
   OccurrenceEventsRepository,
   OccurrencesRepository,
   OccurrenceStatusesRepository,
 } from '../repositories';
-import { MediaService, OccurrenceService } from '../services';
+import { InspectionService, MediaService, OccurrenceService } from '../services';
 import { UsersModule } from './users.module';
 
 @Module({
@@ -24,11 +26,14 @@ import { UsersModule } from './users.module';
   controllers: [OccurrencesController, AgentController],
   providers: [
     OccurrenceService,
+    InspectionService,
     OccurrencesRepository,
+    InspectionsRepository,
     OccurrenceStatusesRepository,
     OccurrenceEventsRepository,
     AssignmentsRepository,
     OccurrenceMapper,
+    InspectionMapper,
     OccurrenceStatusMapper,
     OccurrenceEventMapper,
     OccurrenceHistoryMapper,
@@ -40,7 +45,9 @@ import { UsersModule } from './users.module';
   ],
   exports: [
     OccurrenceService,
+    InspectionService,
     OccurrencesRepository,
+    InspectionsRepository,
     OccurrenceStatusesRepository,
     OccurrenceEventsRepository,
     MediaService,

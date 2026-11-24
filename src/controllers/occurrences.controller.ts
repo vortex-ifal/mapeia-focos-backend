@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UploadedFiles,
   UseInterceptors,
@@ -31,16 +32,19 @@ import { memoryStorage } from 'multer';
 import { type ListOccurrencesFilters } from '../entities';
 import {
   AssignOccurrenceDto,
+  CompleteInspectionDto,
   CreateOccurrenceDto,
   CreateOccurrenceResponseDto,
   FindAllOccurrencesQueryDto,
   HeatmapResponseDto,
+  InspectionResponseDto,
   OccurrenceDetailResponseDto,
   OccurrenceHistoryResponseDto,
   OccurrenceProtocolStatusResponseDto,
   OccurrenceResponseDto,
   PaginationResponseDto,
   ProtocolParamDto,
+  SaveInspectionDraftDto,
   TerritorialContextQueryDto,
   TerritorialContextResponseDto,
   UpdateOccurrencePriorityDto,
@@ -48,8 +52,8 @@ import {
   UploadMediaResponseDto,
   UuidParamDto,
 } from '../dtos';
-import { MediaMapper, OccurrenceMapper } from '../mappers';
-import { MediaService, OccurrenceService } from '../services';
+import { InspectionMapper, MediaMapper, OccurrenceMapper } from '../mappers';
+import { InspectionService, MediaService, OccurrenceService } from '../services';
 
 @ApiTags('Occurrences')
 @Controller('occurrences')
@@ -59,6 +63,8 @@ export class OccurrencesController {
     private readonly occurrenceMapper: OccurrenceMapper,
     private readonly mediaService: MediaService,
     private readonly mediaMapper: MediaMapper,
+    private readonly inspectionService: InspectionService,
+    private readonly inspectionMapper: InspectionMapper,
   ) {}
 
   @Post()
@@ -525,6 +531,174 @@ export class OccurrencesController {
     );
     return history.map((item) =>
       this.occurrenceMapper.toHistoryResponseDto(item),
+    );
+  }
+
+  @Put(':id/inspections/draft')
+  @ApiBearerAuth()
+  @Roles('agent')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Salvar ou atualizar rascunho de vistoria',
+    description:
+      'Salva ou atualiza o rascunho ativo da vistoria realizada pelo agente atribuído à ocorrência, preservando a data inicial (inspectedAt) sem alterar o status da ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Rascunho de vistoria salvo com sucesso.',
+    type: InspectionResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetros ou corpo da requisição inválidos.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'O agente autenticado não está atribuído a esta ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'A ocorrência está arquivada ou não se encontra encaminhada para vistoria.',
+  })
+  async saveInspectionDraft(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+    @Body() dto: SaveInspectionDraftDto,
+  ): Promise<InspectionResponseDto> {
+    const draftEntity = this.inspectionMapper.toDomainFromDraftDto(
+      params.id,
+      user.sub,
+      dto,
+    );
+    const saved = await this.inspectionService.saveDraft(
+      params.id,
+      user.sub,
+      draftEntity,
+    );
+    return this.inspectionMapper.toDto(saved);
+  }
+
+  @Get(':id/inspections/draft')
+  @ApiBearerAuth()
+  @Roles('agent')
+  @ApiOperation({
+    summary: 'Consultar rascunho de vistoria do agente',
+    description:
+      'Recupera o rascunho ativo da vistoria do agente autenticado para pré-preenchimento do formulário em campo.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Rascunho de vistoria recuperado com sucesso.',
+    type: InspectionResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro de rota inválido (ex.: ID não é um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'O agente autenticado não está atribuído a esta ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência ou rascunho de vistoria não encontrado.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'A ocorrência está arquivada ou não se encontra encaminhada para vistoria.',
+  })
+  async getInspectionDraft(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+  ): Promise<InspectionResponseDto> {
+    const draft = await this.inspectionService.getDraft(params.id, user.sub);
+    return this.inspectionMapper.toDto(draft);
+  }
+
+  @Post(':id/inspections')
+  @ApiBearerAuth()
+  @Roles('agent')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Concluir vistoria com definição de desfecho',
+    description:
+      'Finaliza a vistoria (promovendo o rascunho existente ou criando novo registro) com o desfecho informado. Apenas o desfecho "focus_eliminated" atualiza a ocorrência para "resolved" e registra o evento no histórico.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Vistoria concluída com sucesso.',
+    type: InspectionResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetros ou dados da vistoria inválidos.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'O agente autenticado não está atribuído a esta ocorrência.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'A ocorrência está arquivada ou não se encontra encaminhada para vistoria.',
+  })
+  async completeInspection(
+    @CurrentUser() user: AuthenticatedUserPayload,
+    @Param() params: UuidParamDto,
+    @Body() dto: CompleteInspectionDto,
+  ): Promise<InspectionResponseDto> {
+    const inspectionEntity = this.inspectionMapper.toDomainFromCompleteDto(
+      params.id,
+      user.sub,
+      dto,
+    );
+    const completed = await this.inspectionService.complete(
+      params.id,
+      user.sub,
+      inspectionEntity,
+    );
+    return this.inspectionMapper.toDto(completed);
+  }
+
+  @Get(':id/inspections')
+  @ApiBearerAuth()
+  @Roles('agent', 'manager')
+  @ApiOperation({
+    summary: 'Listar vistorias de uma ocorrência',
+    description:
+      'Retorna todas as vistorias registradas para a ocorrência informada, ordenadas da mais recente para a mais antiga.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de vistorias da ocorrência retornada com sucesso.',
+    type: [InspectionResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetro de rota inválido (ex.: ID não é um UUID válido).',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ocorrência não encontrada no sistema.',
+  })
+  async findInspections(
+    @Param() params: UuidParamDto,
+  ): Promise<InspectionResponseDto[]> {
+    const inspections = await this.inspectionService.findByOccurrenceId(
+      params.id,
+    );
+    return inspections.map((inspection) =>
+      this.inspectionMapper.toDto(inspection),
     );
   }
 }

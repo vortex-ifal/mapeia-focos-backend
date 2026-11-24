@@ -34,6 +34,11 @@ export const SEED_OCCURRENCE_EVENTS = {
     key: OccurrenceEventKey.OCCURRENCE_RESTORED,
     description: 'Ocorrência restaurada pela gestão',
   },
+  INSPECTION_PERFORMED: {
+    id: '01a1478e-1c4a-7999-8007-d10ebf63fc07',
+    key: OccurrenceEventKey.INSPECTION_PERFORMED,
+    description: 'Vistoria realizada pelo agente',
+  },
 } as const;
 
 export async function seedOccurrenceEvents(
